@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Gestão KPI</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0A0A0A">
+  <style>
+    :root {
+      --bg:#0A0A0A; --card:#141414; --card2:#1C1C1C; --border:#2A2A2A;
+      --gold:#C9A84C; --gold-l:#E8C96B; --text:#FFFFFF; --muted:#888888;
+      --bronze:#CD7F32; --prata:#A8A9AD; --ouro:#FFD700;
+      --fora:#444444; --danger:#E53935; --success:#43A047;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',Arial,sans-serif; min-height:100vh; }
+
+    /* ── TELA LOGIN ── */
+    #screen-login {
+      min-height:100vh; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; padding:24px;
+      background:radial-gradient(ellipse at top, #1a1400 0%, #0A0A0A 70%);
+    }
+    #screen-login img.logo { width:180px; margin-bottom:20px; }
+    #screen-login h1 { font-size:1.5rem; color:var(--gold); letter-spacing:3px; text-transform:uppercase; margin-bottom:4px; }
+    #screen-login p.sub { color:var(--muted); font-size:.85rem; margin-bottom:32px; letter-spacing:1px; }
+    .role-btns { display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; justify-content:center; max-width:400px; }
+    .role-btn { flex:1; min-width:120px; padding:14px 16px; border-radius:10px; border:2px solid var(--border); background:var(--card); color:var(--muted); font-size:.9rem; cursor:pointer; transition:all .2s; text-align:center; font-weight:600; }
+    .role-btn.active { border-color:var(--gold); color:var(--gold); background:#1e1600; }
+    .login-box { width:100%; max-width:340px; display:flex; flex-direction:column; gap:12px; }
+    .login-box input { padding:14px 16px; border-radius:10px; border:1.5px solid var(--border); background:var(--card2); color:var(--text); font-size:1rem; outline:none; }
+    .login-box input:focus { border-color:var(--gold); }
+    .btn-gold { padding:14px; border-radius:10px; border:none; background:var(--gold); color:#0A0A0A; font-size:1rem; font-weight:700; cursor:pointer; transition:background .2s; }
+    .btn-gold:hover { background:var(--gold-l); }
+    .login-err { color:var(--danger); font-size:.85rem; text-align:center; min-height:18px; }
+    .falcioni-footer { margin-top:40px; opacity:.3; }
+    .falcioni-footer img { height:26px; }
+
+    /* ── SELEÇÃO DE SETOR ── */
+    #screen-setor {
+      min-height:100vh; display:none; flex-direction:column;
+      align-items:center; padding:24px;
+      background:radial-gradient(ellipse at top, #1a1400 0%, #0A0A0A 70%);
+    }
+    #screen-setor img.logo { width:140px; margin:20px 0 8px; }
+    #screen-setor h2 { font-size:1rem; color:var(--gold); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+    #screen-setor p.sub2 { color:var(--muted); font-size:.8rem; margin-bottom:24px; }
+    .setores-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; width:100%; max-width:600px; }
+    .setor-card { background:var(--card); border:2px solid var(--border); border-radius:12px; padding:18px 12px; text-align:center; cursor:pointer; transition:all .2s; }
+    .setor-card:hover { border-color:var(--gold); background:#1a1200; }
+    .setor-card.em-breve { opacity:.45; cursor:not-allowed; }
+    .setor-card .sc-icon { font-size:1.8rem; margin-bottom:8px; }
+    .setor-card .sc-nome { font-size:.88rem; font-weight:700; color:var(--text); }
+    .setor-card .sc-gestor { font-size:.72rem; color:var(--muted); margin-top:3px; }
+    .setor-card .sc-badge { font-size:.65rem; color:var(--gold); background:#1e1600; border:1px solid var(--gold); border-radius:20px; padding:2px 8px; margin-top:5px; display:inline-block; }
+    .setor-card.em-breve .sc-badge { color:var(--muted); background:var(--card2); border-color:var(--border); }
+    .btn-back { background:none; border:1px solid var(--border); color:var(--muted); border-radius:8px; padding:8px 16px; cursor:pointer; font-size:.82rem; margin-bottom:20px; align-self:flex-start; }
+
+    /* ── SELEÇÃO DE AUXILIAR ── */
+    #screen-aux-sel {
+      min-height:100vh; display:none; flex-direction:column;
+      align-items:center; padding:24px;
+      background:radial-gradient(ellipse at top, #1a1400 0%, #0A0A0A 70%);
+    }
+    #screen-aux-sel img.logo { width:120px; margin:16px 0 8px; }
+    #screen-aux-sel h2 { font-size:1rem; color:var(--gold); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+    #screen-aux-sel p.sub3 { color:var(--muted); font-size:.8rem; margin-bottom:20px; }
+    .aux-list { display:flex; flex-direction:column; gap:10px; width:100%; max-width:340px; }
+    .aux-item { background:var(--card); border:2px solid var(--border); border-radius:10px; padding:14px 18px; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:12px; }
+    .aux-item:hover { border-color:var(--gold); background:#1a1200; }
+    .aux-item .ai-avatar { width:36px; height:36px; background:#1e1600; border:1.5px solid var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+    .aux-item .ai-nome { font-size:.95rem; font-weight:600; color:var(--text); }
+
+    /* ── APP LAYOUT ── */
+    #screen-app { display:none; flex-direction:column; min-height:100vh; }
+    .app-header { position:sticky; top:0; z-index:100; background:#0d0d0d; border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; gap:10px; }
+    .app-header img.logo-h { height:34px; }
+    .app-header .info { flex:1; min-width:0; }
+    .app-header .info h2 { font-size:.88rem; color:var(--gold); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .app-header .info span { font-size:.72rem; color:var(--muted); }
+    .mes-sel { display:flex; align-items:center; gap:5px; }
+    .mes-sel select, .mes-sel input[type=number] { background:var(--card); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:5px 6px; font-size:.78rem; }
+    .btn-logout { background:none; border:1px solid var(--border); color:var(--muted); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:.78rem; flex-shrink:0; }
+    .btn-logout:hover { border-color:var(--danger); color:var(--danger); }
+    .btn-lock { background:none; border:1px solid var(--border); color:var(--muted); border-radius:8px; padding:6px 8px; cursor:pointer; font-size:.95rem; line-height:1; transition:all .2s; flex-shrink:0; }
+    .btn-lock.unlocked { border-color:var(--success); color:var(--success); }
+
+    /* ── TABS ── */
+    .tabs { display:flex; background:var(--card); border-bottom:1px solid var(--border); overflow-x:auto; }
+    .tab-btn { flex:1; min-width:80px; padding:12px 6px; border:none; background:none; color:var(--muted); font-size:.78rem; cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; white-space:nowrap; }
+    .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+    .tab-content { display:none; padding:16px; flex:1; }
+    .tab-content.active { display:block; }
+
+    /* ── CARDS INDICADORES ── */
+    .indicadores-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+    .ind-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; position:relative; overflow:hidden; }
+    .ind-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .ind-card.Ouro::before   { background:var(--ouro); }
+    .ind-card.Prata::before  { background:var(--prata); }
+    .ind-card.Bronze::before { background:var(--bronze); }
+    .ind-card.Fora::before   { background:var(--fora); }
+    .ind-card.sem-dado::before { background:var(--border); }
+    .ind-card .nome  { font-size:.78rem; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+    .ind-card .valor { font-size:1.5rem; font-weight:700; }
+    .ind-card .nivel-row { display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:.75rem; font-weight:700; }
+    .badge.Ouro   { background:#332800; color:var(--ouro); }
+    .badge.Prata  { background:#222;    color:var(--prata); }
+    .badge.Bronze { background:#2a1800; color:var(--bronze); }
+    .badge.Fora, .badge.sem-dado { background:#1a1a1a; color:var(--muted); }
+    .bonif-val { font-size:.85rem; color:var(--gold); font-weight:600; }
+    .meta-row  { font-size:.72rem; color:var(--muted); margin-top:4px; }
+    .total-bonif { margin-top:16px; background:#1a1200; border:1px solid var(--gold); border-radius:12px; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; }
+    .total-bonif .label { color:var(--muted); font-size:.85rem; }
+    .total-bonif .valor { font-size:1.5rem; font-weight:700; color:var(--gold); }
+    .btn-lancar { display:inline-flex; align-items:center; gap:8px; padding:11px 18px; background:var(--gold); color:#0A0A0A; border:none; border-radius:10px; font-size:.92rem; font-weight:700; cursor:pointer; margin-bottom:14px; }
+    .btn-lancar:hover { background:var(--gold-l); }
+    .section-title { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+    .lancamentos-dia { margin-bottom:14px; font-size:.8rem; color:var(--muted); }
+    .lancamentos-dia span { color:var(--gold); font-weight:600; }
+
+    /* ── EM BREVE ── */
+    .em-breve-box { text-align:center; padding:60px 20px; }
+    .em-breve-box .eb-icon { font-size:3rem; margin-bottom:16px; }
+    .em-breve-box h3 { color:var(--gold); margin-bottom:8px; }
+    .em-breve-box p { color:var(--muted); font-size:.88rem; }
+
+    /* ── DASHBOARD GERAL (ÍTALO) ── */
+    .geral-header { background:linear-gradient(135deg,#1a1200,#0A0A0A); border:1px solid var(--gold); border-radius:12px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:16px; }
+    .geral-header .gh-icon { font-size:2.5rem; }
+    .geral-header h2 { font-size:1.1rem; color:var(--gold); }
+    .geral-header p { font-size:.82rem; color:var(--muted); }
+    .setores-overview { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+    .setor-overview-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; cursor:pointer; transition:all .2s; }
+    .setor-overview-card:hover { border-color:var(--gold); }
+    .setor-overview-card.em-breve { opacity:.5; cursor:default; }
+    .soc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .soc-nome { font-size:.95rem; font-weight:700; color:var(--gold); display:flex; align-items:center; gap:8px; }
+    .soc-bonif { font-size:.88rem; color:var(--gold); font-weight:600; }
+    .soc-mini-bars { display:flex; flex-direction:column; gap:5px; }
+    .soc-bar { display:flex; align-items:center; gap:8px; }
+    .soc-bar .sb-label { font-size:.7rem; color:var(--muted); width:130px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .soc-bar .sb-track { flex:1; height:14px; background:var(--card2); border-radius:3px; overflow:hidden; }
+    .soc-bar .sb-fill { height:100%; border-radius:3px; }
+    .soc-bar .sb-fill.Ouro   { background:var(--ouro); }
+    .soc-bar .sb-fill.Prata  { background:var(--prata); }
+    .soc-bar .sb-fill.Bronze { background:var(--bronze); }
+    .soc-bar .sb-fill.Fora, .soc-bar .sb-fill.sem-dado { background:var(--fora); }
+    .dash-kpis { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-bottom:20px; }
+    .dash-kpi { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; text-align:center; }
+    .dash-kpi .dk-label { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; }
+    .dash-kpi .dk-val   { font-size:1.4rem; font-weight:700; color:var(--gold); }
+    .dash-kpi .dk-sub   { font-size:.68rem; color:var(--muted); margin-top:2px; }
+
+    /* ── HISTÓRICO ── */
+    .hist-table-wrap { overflow-x:auto; }
+    .hist-table { width:100%; border-collapse:collapse; font-size:.78rem; min-width:500px; }
+    .hist-table th { background:var(--card2); color:var(--muted); padding:7px 9px; text-align:left; border-bottom:1px solid var(--border); }
+    .hist-table td { padding:7px 9px; border-bottom:1px solid var(--border); }
+    .hist-table tr:hover td { background:var(--card2); }
+    .hist-table .nivel.Ouro   { color:var(--ouro); font-weight:700; }
+    .hist-table .nivel.Prata  { color:var(--prata); font-weight:700; }
+    .hist-table .nivel.Bronze { color:var(--bronze); font-weight:700; }
+    .hist-table .nivel.Fora   { color:var(--fora); font-weight:700; }
+    .hist-toggle { display:flex; gap:8px; padding:12px 0 0; }
+    .htog-btn { flex:1; padding:9px 12px; border-radius:8px; border:1.5px solid var(--border); background:var(--card); color:var(--muted); font-size:.8rem; font-weight:600; cursor:pointer; transition:all .2s; }
+    .htog-btn.active { border-color:var(--gold); color:var(--gold); background:#1e1600; }
+    .hist-diario-sel { display:flex; gap:8px; align-items:center; padding:10px 0 0; }
+    .hist-diario-sel select, .hist-diario-sel input { padding:7px 9px; border-radius:8px; border:1.5px solid var(--border); background:var(--card2); color:var(--text); font-size:.82rem; outline:none; }
+
+    /* ── RANKING AUXILIAR ── */
+    .rank-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+    .rank-card .rc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .rank-card .rc-nome { font-size:.92rem; font-weight:700; color:var(--gold); }
+    .rank-card .rc-bonif { font-size:.85rem; color:var(--gold); font-weight:600; }
+    .rank-card .rc-inds { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+    .rc-ind { background:var(--card2); border-radius:8px; padding:7px 10px; }
+    .rc-ind .ri-label { font-size:.68rem; color:var(--muted); margin-bottom:2px; text-transform:uppercase; }
+    .rc-ind .ri-val   { font-size:.9rem; font-weight:700; }
+
+    /* ── MODAL ── */
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:999; align-items:center; justify-content:center; padding:16px; }
+    .modal-bg.open { display:flex; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:16px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; padding:22px; }
+    .modal h3 { color:var(--gold); margin-bottom:14px; font-size:1rem; }
+    .form-group { margin-bottom:12px; }
+    .form-group label { display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px; }
+    .form-group input { width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border); background:var(--card2); color:var(--text); font-size:.92rem; outline:none; }
+    .form-group input:focus { border-color:var(--gold); }
+    .form-group .hint { font-size:.7rem; color:var(--muted); margin-top:2px; }
+    .modal-actions { display:flex; gap:10px; margin-top:18px; }
+    .btn-cancel { flex:1; padding:11px; border-radius:8px; border:1px solid var(--border); background:none; color:var(--muted); cursor:pointer; font-size:.88rem; }
+
+    /* ── CONFIG ── */
+    .config-section { margin-bottom:22px; }
+    .config-section h4 { color:var(--gold); font-size:.88rem; margin-bottom:10px; }
+    .config-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+    .config-grid label { font-size:.72rem; color:var(--muted); display:block; margin-bottom:2px; }
+    .config-grid input { width:100%; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--card2); color:var(--text); font-size:.82rem; outline:none; }
+    .colabs-list { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    .colab-row { display:flex; gap:8px; align-items:center; }
+    .colab-row input { flex:1; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--card2); color:var(--text); font-size:.85rem; outline:none; }
+    .btn-rm { background:none; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:6px 10px; cursor:pointer; font-size:.8rem; }
+    .btn-add-colab { padding:8px 14px; border-radius:6px; border:1px solid var(--gold); background:none; color:var(--gold); cursor:pointer; font-size:.8rem; }
+    .api-box { background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:.72rem; color:var(--muted); word-break:break-all; margin-bottom:6px; }
+    .btn-copy { padding:7px 14px; border-radius:6px; border:1px solid var(--gold); background:none; color:var(--gold); cursor:pointer; font-size:.78rem; }
+    .metas-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+    .metas-grid label { font-size:.7rem; color:var(--muted); display:block; margin-bottom:2px; }
+    .metas-grid input { width:100%; padding:7px 8px; border-radius:6px; border:1px solid var(--border); background:var(--card2); color:var(--text); font-size:.8rem; outline:none; }
+
+    /* ── NIVEL BARS (dashboard) ── */
+    .nivel-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:7px; }
+    .nivel-bar-row .nb-label { width:180px; font-size:.78rem; color:var(--muted); flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .nivel-bar-row .nb-track { flex:1; height:20px; background:var(--card2); border-radius:4px; overflow:hidden; }
+    .nivel-bar-row .nb-fill  { height:100%; border-radius:4px; display:flex; align-items:center; padding-left:7px; font-size:.72rem; font-weight:700; min-width:36px; }
+    .nb-fill.Ouro   { background:#332800; color:var(--ouro); border:1px solid var(--ouro); }
+    .nb-fill.Prata  { background:#222;    color:var(--prata); border:1px solid var(--prata); }
+    .nb-fill.Bronze { background:#2a1800; color:var(--bronze); border:1px solid var(--bronze); }
+    .nb-fill.Fora, .nb-fill.sem-dado { background:#1a1a1a; color:var(--muted); border:1px solid var(--border); }
+    .placar-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .placar-card { background:var(--card); border-radius:10px; padding:10px; text-align:center; border:1px solid var(--border); }
+    .placar-card .pc-num { font-size:1.6rem; font-weight:700; }
+    .placar-card .pc-lbl { font-size:.68rem; color:var(--muted); }
+    .placar-card.ouro .pc-num   { color:var(--ouro); }
+    .placar-card.prata .pc-num  { color:var(--prata); }
+    .placar-card.bronze .pc-num { color:var(--bronze); }
+    .placar-card.fora .pc-num   { color:var(--fora); }
+    .chart-wrap { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; overflow-x:auto; }
+    .dash-section { margin-bottom:22px; }
+    .dash-section h4 { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px; }
+
+    /* ── MISC ── */
+    .loading { text-align:center; padding:40px; color:var(--muted); }
+    .spinner { width:30px; height:30px; border:3px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 10px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--card2); border:1px solid var(--gold); color:var(--text); padding:10px 20px; border-radius:8px; font-size:.85rem; opacity:0; transition:opacity .3s; z-index:9999; pointer-events:none; white-space:nowrap; }
+    #toast.show { opacity:1; }
+  </style>
+</head>
+<body>
+
+<!-- ══ TELA LOGIN ══ -->
+<div id="screen-login">
+  <img class="logo" src="logo-jr.png" alt="JR" onerror="this.style.display='none'">
+  <h1>Gestão KPI</h1>
+  <p class="sub">Sistema de Indicadores PJR</p>
+  <div class="role-btns">
+    <div class="role-btn active" data-role="gestor" onclick="selRole('gestor')">📊 Gestor</div>
+    <div class="role-btn" data-role="auxiliar" onclick="selRole('auxiliar')">🔧 Auxiliar</div>
+    <div class="role-btn" data-role="geral" onclick="selRole('geral')">👑 Gestão Geral</div>
+  </div>
+  <div class="login-box">
+    <input type="password" id="inp-senha" placeholder="Senha" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn-gold" onclick="login()">Entrar</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+  <div class="falcioni-footer"><img src="Falcioni.jpg" alt="Falcioni" onerror="this.style.display='none'"></div>
+</div>
+
+<!-- ══ SELEÇÃO DE SETOR ══ -->
+<div id="screen-setor" style="display:none">
+  <button class="btn-back" onclick="voltarLogin()">← Voltar</button>
+  <img class="logo" src="logo-jr.png" alt="JR" onerror="this.style.display='none'">
+  <h2 id="setor-sel-titulo">Selecione o Setor</h2>
+  <p class="sub2" id="setor-sel-sub">Escolha seu setor para continuar</p>
+  <div class="setores-grid" id="setores-grid"></div>
+  <div class="falcioni-footer" style="margin-top:32px"><img src="Falcioni.jpg" alt="Falcioni" onerror="this.style.display='none'"></div>
+</div>
+
+<!-- ══ SELEÇÃO DE AUXILIAR ══ -->
+<div id="screen-aux-sel" style="display:none">
+  <button class="btn-back" onclick="voltarSetores()">← Voltar</button>
+  <img class="logo" src="logo-jr.png" alt="JR" onerror="this.style.display='none'">
+  <h2 id="aux-sel-titulo">Selecione seu Nome</h2>
+  <p class="sub3" id="aux-sel-sub">Setor: —</p>
+  <div class="aux-list" id="aux-list"></div>
+  <div class="falcioni-footer" style="margin-top:32px"><img src="Falcioni.jpg" alt="Falcioni" onerror="this.style.display='none'"></div>
+</div>
+
+<!-- ══ APP PRINCIPAL ══ -->
+<div id="screen-app" style="display:none">
+  <div class="app-header">
+    <img class="logo-h" src="logo-jr.png" alt="JR" onerror="this.style.display='none'">
+    <div class="info"><h2 id="hdr-titulo">—</h2><span id="hdr-sub">—</span></div>
+    <div class="mes-sel">
+      <select id="app-mes" onchange="carregarApp()">
+        <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+        <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+        <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+        <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+      </select>
+      <input type="number" id="app-ano" value="2026" min="2024" max="2030" onchange="carregarApp()" style="width:62px">
+    </div>
+    <button class="btn-lock" id="app-lock-btn" onclick="toggleAdmin()">🔒</button>
+    <button class="btn-logout" onclick="logout()">Sair</button>
+  </div>
+  <div class="tabs" id="app-tabs"></div>
+  <div id="app-tab-contents"></div>
+</div>
+
+<!-- ══ MODAIS ══ -->
+<div class="modal-bg" id="modal-lancar">
+  <div class="modal">
+    <h3 id="modal-lancar-titulo">📋 Lançar Indicadores</h3>
+    <div class="form-group"><label>Data</label><input type="date" id="lancar-data"></div>
+    <div id="lancar-campos"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModais()">Cancelar</button>
+      <button class="btn-gold" style="flex:1" onclick="salvarLancamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-admin">
+  <div class="modal" style="max-width:320px">
+    <h3>🔑 Acesso Administrativo</h3>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Digite a senha para revelar bonificações.</p>
+    <div class="form-group"><input type="password" id="admin-senha" placeholder="Senha admin" onkeydown="if(event.key==='Enter')confirmarAdmin()"></div>
+    <div class="login-err" id="admin-err"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModais()">Cancelar</button>
+      <button class="btn-gold" style="flex:1" onclick="confirmarAdmin()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-limpar">
+  <div class="modal" style="max-width:360px">
+    <h3 style="color:var(--danger)">⚠️ Limpar Dados</h3>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:8px">Apaga todos os lançamentos do setor selecionado.</p>
+    <p style="font-size:.8rem;color:var(--danger);margin-bottom:14px;padding:10px;background:#1a0000;border-radius:8px;border:1px solid #3a0000">Esta ação <strong>não pode ser desfeita</strong>.</p>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Digite <strong style="color:var(--text)">CONFIRMAR</strong>:</p>
+    <div class="form-group"><input type="text" id="limpar-input" placeholder="CONFIRMAR" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="login-err" id="limpar-err"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModais()">Cancelar</button>
+      <button onclick="confirmarLimpar()" style="flex:1;padding:11px;border-radius:8px;border:none;background:var(--danger);color:#fff;font-size:.88rem;font-weight:700;cursor:pointer">🗑️ Apagar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, getDocs, query, where,
+         doc, setDoc, getDoc, orderBy, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const FB = {
+  apiKey:"AIzaSyDTqmtUcFa2EZTD304RYb_vb6BLvo9PknQ",
+  authDomain:"jr-banho.firebaseapp.com", projectId:"jr-banho",
+  storageBucket:"jr-banho.firebasestorage.app",
+  messagingSenderId:"56470186011",
+  appId:"1:56470186011:web:8853cada4d8b179868b0be"
+};
+const fbApp = initializeApp(FB, 'gestaokpi');
+const db = getFirestore(fbApp);
+
+// ══ DEFINIÇÃO DOS SETORES ══
+const SETORES_DEF = {
+  banho: {
+    icon:'🫧', nome:'Banho', gestor:'Ricardo', status:'ativo',
+    colGestor:'lancamentos_gestor', colAuxiliar:'lancamentos_auxiliar',
+    configSenhas:'senhas', configColabs:'colaboradores',
+    configMetasG:'metas_gestor', configMetasA:'metas_auxiliar',
+    metas_g: {
+      producao_kg: { label:'Produção Geral',          tipo:'maior', bronze:300, prata:500, ouro:625, bonif:{bronze:12.5,prata:15,ouro:25}, agg:'sum', unit:'KG' },
+      retrabalho:  { label:'Retrabalho',               tipo:'menor', bronze:3,   prata:2,   ouro:0,   bonif:{bronze:12.5,prata:15,ouro:25}, agg:'sum', unit:'oc' },
+      erro_banho:  { label:'Erro Banho',               tipo:'menor', bronze:5,   prata:2,   ouro:0,   bonif:{bronze:12.5,prata:15,ouro:25}, agg:'sum', unit:'oc' },
+      inovacao:    { label:'Inovação e Criatividade',  tipo:'maior', bronze:2,   prata:3,   ouro:4,   bonif:{bronze:12.5,prata:15,ouro:25}, agg:'sum', unit:'pt' },
+      checklist:   { label:'Checklist de Rotina',      tipo:'maior', bronze:85,  prata:90,  ouro:100, bonif:{bronze:12.5,prata:15,ouro:25}, agg:'avg', unit:'%'  },
+      plano_desenv:{ label:'Pl. Desenvolvimento',      tipo:'maior', bronze:85,  prata:90,  ouro:100, bonif:{bronze:12.5,prata:15,ouro:25}, agg:'avg', unit:'%'  },
+      estoque:     { label:'Controle de Estoque',      tipo:'maior', bronze:90,  prata:95,  ouro:100, bonif:{bronze:12.5,prata:15,ouro:25}, agg:'avg', unit:'%'  },
+    },
+    metas_a: {
+      producao_ind:{ label:'Produção Individual',      tipo:'maior', bronze:15,  prata:20,  ouro:25,  bonif:{bronze:12.5,prata:15,ouro:25}, agg:'sum', unit:'KG' },
+      erro_banho:  { label:'Erro Banho',               tipo:'menor', bronze:3,   prata:1,   ouro:0,   bonif:{bronze:12.5,prata:15,ouro:25}, agg:'sum', unit:'oc' },
+      inovacao:    { label:'Inovação e Criatividade',  tipo:'maior', bronze:2,   prata:3,   ouro:4,   bonif:{bronze:12.5,prata:15,ouro:25}, agg:'sum', unit:'pt' },
+      retrabalho:  { label:'Retrabalho',               tipo:'menor', bronze:3,   prata:2,   ouro:0,   bonif:{bronze:12.5,prata:15,ouro:25}, agg:'sum', unit:'oc' },
+    },
+    temAuxMultiplos: true,
+  },
+  cadastro: {
+    icon:'📋', nome:'Cadastro', gestor:'Arthur', status:'ativo',
+    colGestor:'lancamentos_arthur', colAuxiliar:'lancamentos_cicero',
+    configSenhas:'senhas_cadastro', configColabs:'colaboradores_cadastro',
+    configMetasG:'metas_gestor_cadastro', configMetasA:'metas_auxiliar_cadastro',
+    metas_g: {
+      erro_cadastro:   { label:'Erro de Cadastro',          tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'sum', unit:'oc' },
+      cadastros_realiz:{ label:'Cadastros Realizados',      tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
+      inovacao:        { label:'Inovação e Criatividade',   tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'sum', unit:'pt' },
+      plano_desenv:    { label:'Pl. Desenvolvimento',       tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
+      checklist:       { label:'Checklist de Rotina',       tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
+      ocorrencia:      { label:'Ocorrências',               tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'sum', unit:'oc' },
+      prazo_cadastro:  { label:'Prazo de Cadastro',         tipo:'menor', bronze:48, prata:24, ouro:12,  bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'h'  },
+    },
+    metas_a: {
+      atualizacao_cad:  { label:'Atualização Cadastral',    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
+      tempo_atualizacao:{ label:'Tempo de Atualização',     tipo:'menor', bronze:48, prata:36, ouro:24,  bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'h'  },
+      erro_imagem:      { label:'Erro de Imagem',           tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
+      os_executadas:    { label:'OS Executadas',            tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
+      inovacao:         { label:'Inovação e Criatividade',  tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'sum', unit:'pt' },
+      manutencao_ti:    { label:'Manutenção TI',            tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
+      banco_dados:      { label:'Banco de Dados',           tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
+    },
+    temAuxMultiplos: false,
+  },
+  estoque: {
+    icon:'📦', nome:'Estoque', gestor:'Adriana', status:'ativo',
+    colGestor:'lancamentos_adriana', colAuxiliar:'lancamentos_rosangela',
+    configSenhas:'senhas_estoque', configColabs:'colaboradores_estoque',
+    configMetasG:'metas_gestor_estoque', configMetasA:'metas_auxiliar_estoque',
+    metas_g: {
+      cinco_s:           { label:'5S',                           tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      pecas_validadas:   { label:'Peças Criadas x Validadas',    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      tempo_os:          { label:'Tempo Médio OS',               tipo:'menor', bronze:36, prata:24, ouro:12,  bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'h'  },
+      qualif_terceirizado:{ label:'Qualif. Terceirizado',        tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      checklist:         { label:'Checklist de Rotina',          tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      inovacao:          { label:'Inovação e Criatividade',      tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'sum', unit:'pt' },
+      plano_desenv:      { label:'Pl. Desenvolvimento',          tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      controle_estoque:  { label:'Controle de Estoque',          tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      qualif_fornecedor: { label:'Qualif. Fornecedor x Compra',  tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+    },
+    metas_a: {
+      pecas_qualificadas:{ label:'Peças Enviadas x Qualificadas',tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
+      inovacao:          { label:'Inovação e Criatividade',      tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'sum', unit:'pt' },
+      prod_demanda:      { label:'Produção da Demanda',          tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'sum', unit:'pt' },
+      cinco_s:           { label:'5S',                           tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
+    },
+    temAuxMultiplos: false,
+  },
+  portaria:     { icon:'🚪', nome:'Portaria',     gestor:'Alan',     status:'em_breve', temAuxMultiplos:true  },
+  estoque_bruto:{ icon:'🪨', nome:'Estoque Bruto',gestor:'—',        status:'em_breve', temAuxMultiplos:true  },
+  padronizacao: { icon:'📐', nome:'Padronização', gestor:'Aline',    status:'em_breve', temAuxMultiplos:true  },
+  fundicao:     { icon:'🔥', nome:'Fundição',     gestor:'Jackson',  status:'em_breve', temAuxMultiplos:true  },
+  recepcao:     { icon:'🖥️', nome:'Recepção',     gestor:'Josi',     status:'em_breve', temAuxMultiplos:false },
+  financeiro:   { icon:'💰', nome:'Financeiro',   gestor:'Daiane',   status:'em_breve', temAuxMultiplos:true  },
+  comercial:    { icon:'🛍️', nome:'Comercial',    gestor:'Comercial 1', status:'em_breve', temAuxMultiplos:false },
+};
+
+// ══ ESTADO GLOBAL ══
+let roleAtual = 'gestor';
+let setorAtual = null;
+let colaboradorAtual = null;
+let adminUnlocked = false;
+let METAS_G_ATUAL = {};
+let METAS_A_ATUAL = {};
+let colabsAtuais = [];
+
+// ══ UTILS ══
+function fmtBonif(v) { return adminUnlocked ? `R$ ${v.toFixed(2).replace('.',',')}` : '🔒 ••••'; }
+function fmtVal(v, unit) {
+  if (v===null||v===undefined) return '—';
+  const n=Number(v); if(isNaN(n)) return '—';
+  return n.toLocaleString('pt-BR',{maximumFractionDigits:1})+(unit?` ${unit}`:'');
+}
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+function avaliar(chave, valor, metas) {
+  const m=metas[chave];
+  if(!m||valor===null||valor===undefined||valor==='') return 'sem-dado';
+  const v=parseFloat(valor);
+  if(m.tipo==='maior'){if(v>=m.ouro)return 'Ouro';if(v>=m.prata)return 'Prata';if(v>=m.bronze)return 'Bronze';return 'Fora';}
+  else{if(v<=m.ouro)return 'Ouro';if(v<=m.prata)return 'Prata';if(v<=m.bronze)return 'Bronze';return 'Fora';}
+}
+function calcBonif(nivel, bonif) {
+  if(nivel==='Ouro')return bonif.ouro;if(nivel==='Prata')return bonif.prata;if(nivel==='Bronze')return bonif.bronze;return 0;
+}
+function agregarMes(lancs, metas) {
+  const r={};
+  Object.keys(metas).forEach(k=>{
+    const vals=lancs.map(l=>l[k]).filter(v=>v!==undefined&&v!==null&&v!=='');
+    if(!vals.length){r[k]=null;return;}
+    const nums=vals.map(Number);
+    r[k]=metas[k].agg==='avg'?nums.reduce((a,b)=>a+b,0)/nums.length:nums.reduce((a,b)=>a+b,0);
+  });
+  return r;
+}
+function calcTotalBonif(totais, metas) {
+  return Object.keys(metas).reduce((s,k)=>s+calcBonif(avaliar(k,totais[k],metas),metas[k].bonif),0);
+}
+function show(id) {
+  ['screen-login','screen-setor','screen-aux-sel','screen-app'].forEach(s=>{
+    const el=document.getElementById(s);
+    el.style.display=s===id?(s==='screen-app'?'flex':'flex'):'none';
+  });
+  if(id==='screen-app') document.getElementById('screen-app').style.flexDirection='column';
+}
+const MESES_NOME=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+// ══ LOCK ADMIN ══
+window.toggleAdmin = () => {
+  if(adminUnlocked){ adminUnlocked=false; atualizarLockUI(); reRender(); }
+  else { document.getElementById('admin-senha').value=''; document.getElementById('admin-err').textContent=''; document.getElementById('modal-admin').classList.add('open'); setTimeout(()=>document.getElementById('admin-senha').focus(),100); }
+};
+window.confirmarAdmin = async () => {
+  const senha=document.getElementById('admin-senha').value;
+  const err=document.getElementById('admin-err');
+  try {
+    const snap=await getDoc(doc(db,'config','senhas_geral'));
+    const s=snap.exists()?snap.data():{};
+    if(senha===(s.admin||'admin123')){ adminUnlocked=true; fecharModais(); atualizarLockUI(); reRender(); }
+    else err.textContent='Senha incorreta';
+  } catch(e){ err.textContent='Erro de conexão'; }
+};
+function atualizarLockUI() {
+  document.querySelectorAll('.btn-lock').forEach(b=>{ b.textContent=adminUnlocked?'🔓':'🔒'; b.classList.toggle('unlocked',adminUnlocked); });
+}
+function reRender() { carregarApp(); }
+window.fecharModais = () => document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('open'));
+
+// ══ LOGIN ══
+window.selRole = (role) => {
+  roleAtual=role;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`[data-role="${role}"]`).classList.add('active');
+};
+window.login = async () => {
+  const senha=document.getElementById('inp-senha').value;
+  const err=document.getElementById('login-err');
+  if(!senha){err.textContent='Digite a senha';return;}
+  err.textContent='';
+  if(roleAtual==='geral'){
+    try{
+      const snap=await getDoc(doc(db,'config','senhas_geral'));
+      const s=snap.exists()?snap.data():{gestor:'admin123',admin:'admin123'};
+      if(!snap.exists()) await setDoc(doc(db,'config','senhas_geral'),{gestor:'admin123',admin:'admin123'});
+      if(senha===s.gestor){ setorAtual='geral'; entrarGeral(); }
+      else err.textContent='Senha incorreta';
+    }catch(e){err.textContent='Erro de conexão';}
+    return;
+  }
+  // Para gestor/auxiliar, precisa escolher setor primeiro
+  mostrarSetores();
+  window._senhaPendente = senha;
+};
+function mostrarSetores() {
+  document.getElementById('setor-sel-titulo').textContent = roleAtual==='gestor' ? 'Selecione seu Setor' : 'Selecione o Setor';
+  document.getElementById('setor-sel-sub').textContent = roleAtual==='gestor' ? 'Acesso como Gestor' : 'Acesso como Auxiliar';
+  const grid=document.getElementById('setores-grid');
+  grid.innerHTML=Object.entries(SETORES_DEF).map(([key,s])=>`
+    <div class="setor-card${s.status==='em_breve'?' em-breve':''}" onclick="${s.status==='ativo'?`selecionarSetor('${key}')`:''}" >
+      <div class="sc-icon">${s.icon}</div>
+      <div class="sc-nome">${s.nome}</div>
+      <div class="sc-gestor">${s.gestor}</div>
+      <div class="sc-badge">${s.status==='ativo'?'Ativo':'Em breve'}</div>
+    </div>`).join('');
+  show('screen-setor');
+}
+window.voltarLogin = () => { window._senhaPendente=null; show('screen-login'); };
+window.voltarSetores = () => { mostrarSetores(); };
+
+window.selecionarSetor = async (key) => {
+  setorAtual=key;
+  const s=SETORES_DEF[key];
+  const senha=window._senhaPendente;
+  const err=document.getElementById('login-err');
+  try {
+    const snap=await getDoc(doc(db,'config',s.configSenhas));
+    const senhas=snap.exists()?snap.data():{gestor:'gestor123',auxiliar:'auxiliar123',admin:'admin123'};
+    if(!snap.exists()) await setDoc(doc(db,'config',s.configSenhas),senhas);
+    if(roleAtual==='gestor'&&senha===senhas.gestor){ await entrarGestorSetor(key); }
+    else if(roleAtual==='auxiliar'&&senha===senhas.auxiliar){
+      if(s.temAuxMultiplos){ await mostrarAuxSel(key); }
+      else { colaboradorAtual=null; await entrarAuxiliarSetor(key); }
+    } else { show('screen-login'); err.textContent='Senha incorreta'; }
+  } catch(e){ show('screen-login'); err.textContent='Erro de conexão'; }
+};
+
+async function mostrarAuxSel(key) {
+  const s=SETORES_DEF[key];
+  document.getElementById('aux-sel-titulo').textContent='Selecione seu Nome';
+  document.getElementById('aux-sel-sub').textContent=`Setor: ${s.nome}`;
+  let colabs=[];
+  try{
+    const snap=await getDoc(doc(db,'config',s.configColabs));
+    colabs=snap.exists()?(snap.data().lista||[]):[];
+    if(!colabs.length){ colabs=['Auxiliar 1','Auxiliar 2']; await setDoc(doc(db,'config',s.configColabs),{lista:colabs}); }
+  }catch(e){ colabs=['Auxiliar 1']; }
+  document.getElementById('aux-list').innerHTML=colabs.map(nome=>`
+    <div class="aux-item" onclick="selecionarAuxiliar('${nome.replace(/'/g,"\\'")}','${key}')">
+      <div class="ai-avatar">👤</div>
+      <div class="ai-nome">${nome}</div>
+    </div>`).join('');
+  show('screen-aux-sel');
+}
+window.selecionarAuxiliar = async (nome, key) => { colaboradorAtual=nome; await entrarAuxiliarSetor(key); };
+
+// ══ ENTRADA NOS SETORES ══
+async function entrarGeral() {
+  adminUnlocked=false;
+  document.getElementById('hdr-titulo').textContent='Gestão KPI';
+  document.getElementById('hdr-sub').textContent='Visão Geral — Ítalo';
+  document.getElementById('app-mes').value=new Date().getMonth()+1;
+  document.getElementById('app-ano').value=new Date().getFullYear();
+  montarTabsGeral();
+  show('screen-app');
+  await carregarGeral();
+}
+
+async function entrarGestorSetor(key) {
+  const s=SETORES_DEF[key];
+  adminUnlocked=false;
+  await carregarMetasSetor(key);
+  document.getElementById('hdr-titulo').textContent=`Setor ${s.nome}`;
+  document.getElementById('hdr-sub').textContent=`Gestor — ${s.gestor}`;
+  document.getElementById('app-mes').value=new Date().getMonth()+1;
+  document.getElementById('app-ano').value=new Date().getFullYear();
+  montarTabsGestor();
+  show('screen-app');
+  await carregarApp();
+}
+
+async function entrarAuxiliarSetor(key) {
+  const s=SETORES_DEF[key];
+  adminUnlocked=false;
+  await carregarMetasSetor(key);
+  const nome=colaboradorAtual||'Auxiliar';
+  document.getElementById('hdr-titulo').textContent=`Setor ${s.nome}`;
+  document.getElementById('hdr-sub').textContent=`Auxiliar — ${nome}`;
+  document.getElementById('app-mes').value=new Date().getMonth()+1;
+  document.getElementById('app-ano').value=new Date().getFullYear();
+  montarTabsAuxiliar();
+  show('screen-app');
+  await carregarApp();
+}
+
+async function carregarMetasSetor(key) {
+  const s=SETORES_DEF[key];
+  METAS_G_ATUAL={...JSON.parse(JSON.stringify(s.metas_g||{}))};
+  METAS_A_ATUAL={...JSON.parse(JSON.stringify(s.metas_a||{}))};
+  try {
+    const [sg,sa]=await Promise.all([
+      getDoc(doc(db,'config',s.configMetasG||'_x_')),
+      getDoc(doc(db,'config',s.configMetasA||'_x_'))
+    ]);
+    if(sg.exists()) Object.keys(sg.data()).forEach(k=>{ if(METAS_G_ATUAL[k]) Object.assign(METAS_G_ATUAL[k],sg.data()[k]); });
+    if(sa.exists()) Object.keys(sa.data()).forEach(k=>{ if(METAS_A_ATUAL[k]) Object.assign(METAS_A_ATUAL[k],sa.data()[k]); });
+  } catch(e){}
+}
+
+window.logout = () => {
+  adminUnlocked=false; setorAtual=null; colaboradorAtual=null;
+  window._senhaPendente=null;
+  atualizarLockUI();
+  document.getElementById('inp-senha').value='';
+  document.getElementById('login-err').textContent='';
+  show('screen-login');
+};
+
+// ══ MONTAGEM DE TABS ══
+function montarTabsGeral() {
+  document.getElementById('app-tabs').innerHTML=`
+    <button class="tab-btn active" onclick="showTab('geral-overview',this)">🏢 Visão Geral</button>
+    <button class="tab-btn" onclick="showTab('geral-config',this)">⚙️ Config</button>`;
+  document.getElementById('app-tab-contents').innerHTML=`
+    <div id="tab-geral-overview" class="tab-content active">
+      <div class="geral-header"><div class="gh-icon">👑</div><div><h2>Gestão KPI — PJR</h2><p>Visão consolidada de todos os setores</p></div></div>
+      <div class="dash-kpis" id="geral-kpis"></div>
+      <p class="section-title">Status por Setor</p>
+      <div class="setores-overview" id="geral-setores"></div>
+    </div>
+    <div id="tab-geral-config" class="tab-content">
+      <div class="config-section">
+        <h4>🔑 Senhas do Sistema</h4>
+        <div class="config-grid">
+          <div><label>Senha Gestão Geral (Ítalo)</label><input type="password" id="cfg-senha-geral" placeholder="••••••"></div>
+          <div><label>Senha Admin 🔒</label><input type="password" id="cfg-senha-admin" placeholder="••••••"></div>
+        </div>
+        <button class="btn-gold" onclick="salvarSenhasGeral()" style="padding:9px 18px;font-size:.82rem">Salvar Senhas</button>
+      </div>
+      <div class="config-section">
+        <h4>👥 Nomes dos Gestores por Setor</h4>
+        <div id="cfg-gestores-list"></div>
+        <button class="btn-gold" onclick="salvarGestores()" style="padding:9px 18px;font-size:.82rem;margin-top:8px">Salvar Nomes</button>
+      </div>
+      ${Object.entries(SETORES_DEF).filter(([,s])=>s.status==='ativo'&&s.temAuxMultiplos).map(([key,s])=>`
+      <div class="config-section">
+        <h4>👥 Auxiliares — ${s.nome}</h4>
+        <div class="colabs-list" id="colabs-${key}"></div>
+        <button class="btn-add-colab" onclick="addColab('${key}')">+ Adicionar</button>
+        <button class="btn-gold" onclick="salvarColabs('${key}')" style="padding:8px 16px;font-size:.8rem;margin-left:8px">Salvar</button>
+      </div>`).join('')}
+      <div class="falcioni-footer" style="text-align:center;margin-top:24px;opacity:.3"><img src="Falcioni.jpg" style="height:22px" onerror="this.style.display='none'"></div>
+    </div>`;
+  renderCfgGestores();
+  Object.entries(SETORES_DEF).filter(([,s])=>s.status==='ativo'&&s.temAuxMultiplos).forEach(([key])=>carregarColabsConfig(key));
+}
+
+function montarTabsGestor() {
+  document.getElementById('app-tabs').innerHTML=`
+    <button class="tab-btn active" onclick="showTab('g-ind',this)">📊 Indicadores</button>
+    <button class="tab-btn" onclick="showTab('g-dash',this)">📈 Dashboard</button>
+    <button class="tab-btn" onclick="showTab('g-aux',this)">🔧 Auxiliar</button>
+    <button class="tab-btn" onclick="showTab('g-hist',this)">📅 Histórico</button>
+    <button class="tab-btn" onclick="showTab('g-cfg',this)">⚙️ Config</button>`;
+  const s=SETORES_DEF[setorAtual];
+  const histKeys=Object.keys(METAS_G_ATUAL);
+  document.getElementById('app-tab-contents').innerHTML=`
+    <div id="tab-g-ind" class="tab-content active">
+      <button class="btn-lancar" onclick="abrirModal('gestor')">＋ Lançar Hoje</button>
+      <div class="lancamentos-dia" id="lanc-hoje-g"></div>
+      <div id="g-loading" class="loading"><div class="spinner"></div>Carregando...</div>
+      <div id="g-cards" class="indicadores-grid" style="display:none"></div>
+      <div id="g-total" class="total-bonif" style="display:none">
+        <span class="label">💰 Bonificação Total (Mês)</span>
+        <span class="valor" id="g-total-val">R$ 0,00</span>
+      </div>
+    </div>
+    <div id="tab-g-dash" class="tab-content">
+      <div class="dash-kpis">
+        <div class="dash-kpi"><div class="dk-label">Bonif. Gestor</div><div class="dk-val" id="dk-g">—</div></div>
+        <div class="dash-kpi"><div class="dk-label">Bonif. Auxiliar</div><div class="dk-val" id="dk-a">—</div></div>
+        <div class="dash-kpi"><div class="dk-label">Total Pago</div><div class="dk-val" id="dk-tot">—</div></div>
+        <div class="dash-kpi"><div class="dk-label">Indicadores Ouro</div><div class="dk-val" id="dk-ouro" style="color:var(--ouro)">—</div></div>
+      </div>
+      <div class="dash-section"><h4>🏅 Status — Gestor</h4><div id="dash-bars-g"></div></div>
+      <div class="dash-section"><h4>🥇 Placar Mensal — Gestor</h4><div class="placar-grid" id="dash-placar"></div></div>
+      <div class="dash-section"><h4>📈 Evolução Anual</h4><div class="chart-wrap"><svg id="dash-chart" width="100%" height="180" viewBox="0 0 700 180"></svg></div><div id="dash-legend" style="display:flex;gap:16px;margin-top:8px;font-size:.75rem;color:var(--muted)"></div></div>
+    </div>
+    <div id="tab-g-aux" class="tab-content">
+      <p class="section-title">Auxiliares — Mês Selecionado</p>
+      <div id="g-aux-loading" class="loading"><div class="spinner"></div></div>
+      <div id="g-aux-ranking"></div>
+      <div id="g-aux-total" class="total-bonif" style="display:none">
+        <span class="label">💰 Total Auxiliares</span>
+        <span class="valor" id="g-aux-total-val">R$ 0,00</span>
+      </div>
+    </div>
+    <div id="tab-g-hist" class="tab-content">
+      <p class="section-title">Histórico — Gestor</p>
+      <div class="hist-toggle">
+        <button class="htog-btn active" onclick="switchHist('g','mensal',this)">📅 Mensal</button>
+        <button class="htog-btn" onclick="switchHist('g','diario',this)">📋 Diário</button>
+      </div>
+      <div id="g-hist-mensal" style="padding-top:10px">
+        <div class="hist-table-wrap"><table class="hist-table">
+          <thead><tr><th>Mês</th>${histKeys.map(k=>`<th>${METAS_G_ATUAL[k].label}</th>`).join('')}<th>Bonif.</th></tr></thead>
+          <tbody id="g-hist-body"></tbody>
+        </table></div>
+      </div>
+      <div id="g-hist-diario" style="display:none">
+        <div class="hist-diario-sel">
+          <select id="g-dmes" onchange="renderDiario('gestor')">${MESES_NOME.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('')}</select>
+          <input type="number" id="g-dano" value="2026" min="2024" max="2030" onchange="renderDiario('gestor')" style="width:70px">
+        </div>
+        <div class="hist-table-wrap" style="padding-top:8px"><table class="hist-table">
+          <thead><tr><th>Data</th>${histKeys.map(k=>`<th>${METAS_G_ATUAL[k].label}</th>`).join('')}</tr></thead>
+          <tbody id="g-hist-diario-body"></tbody>
+        </table></div>
+      </div>
+    </div>
+    <div id="tab-g-cfg" class="tab-content">
+      <div class="config-section">
+        <h4>🔑 Senhas — ${s.nome}</h4>
+        <div class="config-grid">
+          <div><label>Nova senha — Gestor</label><input type="password" id="cfg-g-senha-g" placeholder="••••••"></div>
+          <div><label>Nova senha — Auxiliar</label><input type="password" id="cfg-g-senha-a" placeholder="••••••"></div>
+        </div>
+        <button class="btn-gold" onclick="salvarSenhasSetor()" style="padding:9px 18px;font-size:.82rem">Salvar Senhas</button>
+      </div>
+      ${s.temAuxMultiplos?`
+      <div class="config-section">
+        <h4>👥 Auxiliares do Setor</h4>
+        <div class="colabs-list" id="colabs-setor"></div>
+        <button class="btn-add-colab" onclick="addColabSetor()">+ Adicionar</button>
+        <button class="btn-gold" onclick="salvarColabsSetor()" style="padding:8px 16px;font-size:.8rem;margin-left:8px">Salvar</button>
+      </div>`:''}
+      <div class="config-section">
+        <h4>🎯 Metas — Gestor</h4>
+        <div id="cfg-metas-g"></div>
+        <button class="btn-gold" onclick="salvarMetasGestor()" style="padding:9px 18px;font-size:.82rem;margin-top:8px">Salvar Metas Gestor</button>
+      </div>
+      <div class="config-section">
+        <h4>🎯 Metas — Auxiliar</h4>
+        <div id="cfg-metas-a"></div>
+        <button class="btn-gold" onclick="salvarMetasAuxiliar()" style="padding:9px 18px;font-size:.82rem;margin-top:8px">Salvar Metas Auxiliar</button>
+      </div>
+      <div class="config-section">
+        <h4>🔗 API Power BI</h4>
+        <div id="cfg-api-urls"></div>
+      </div>
+      <div class="config-section" style="border-top:1px solid var(--border);padding-top:20px">
+        <h4 style="color:var(--danger)">🗑️ Limpar Dados</h4>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:10px">Remove todos os lançamentos deste setor.</p>
+        <button onclick="abrirModalLimpar()" style="padding:9px 18px;border-radius:8px;border:1.5px solid var(--danger);background:none;color:var(--danger);font-size:.88rem;font-weight:700;cursor:pointer">🗑️ Limpar dados do setor</button>
+      </div>
+      <div class="falcioni-footer" style="text-align:center;margin-top:24px;opacity:.3"><img src="Falcioni.jpg" style="height:22px" onerror="this.style.display='none'"></div>
+    </div>`;
+  renderCfgMetasGestor(); renderCfgMetasAuxiliar(); renderApiUrls();
+  if(s.temAuxMultiplos) carregarColabsSetor();
+}
+
+function montarTabsAuxiliar() {
+  document.getElementById('app-tabs').innerHTML=`
+    <button class="tab-btn active" onclick="showTab('a-ind',this)">📊 Indicadores</button>
+    <button class="tab-btn" onclick="showTab('a-hist',this)">📅 Histórico</button>`;
+  const histKeys=Object.keys(METAS_A_ATUAL);
+  document.getElementById('app-tab-contents').innerHTML=`
+    <div id="tab-a-ind" class="tab-content active">
+      <button class="btn-lancar" onclick="abrirModal('auxiliar')">＋ Lançar Hoje</button>
+      <div class="lancamentos-dia" id="lanc-hoje-a"></div>
+      <div id="a-loading" class="loading"><div class="spinner"></div>Carregando...</div>
+      <div id="a-cards" class="indicadores-grid" style="display:none"></div>
+      <div id="a-total" class="total-bonif" style="display:none">
+        <span class="label">💰 Minha Bonificação (Mês)</span>
+        <span class="valor" id="a-total-val">R$ 0,00</span>
+      </div>
+      <div class="falcioni-footer" style="text-align:center;margin-top:32px;opacity:.3"><img src="Falcioni.jpg" style="height:22px" onerror="this.style.display='none'"></div>
+    </div>
+    <div id="tab-a-hist" class="tab-content">
+      <p class="section-title">Histórico — ${colaboradorAtual||'Auxiliar'}</p>
+      <div class="hist-toggle">
+        <button class="htog-btn active" onclick="switchHist('a','mensal',this)">📅 Mensal</button>
+        <button class="htog-btn" onclick="switchHist('a','diario',this)">📋 Diário</button>
+      </div>
+      <div id="a-hist-mensal" style="padding-top:10px">
+        <div class="hist-table-wrap"><table class="hist-table">
+          <thead><tr><th>Mês</th>${histKeys.map(k=>`<th>${METAS_A_ATUAL[k].label}</th>`).join('')}<th>Bonif.</th></tr></thead>
+          <tbody id="a-hist-body"></tbody>
+        </table></div>
+      </div>
+      <div id="a-hist-diario" style="display:none">
+        <div class="hist-diario-sel">
+          <select id="a-dmes" onchange="renderDiario('auxiliar')">${MESES_NOME.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('')}</select>
+          <input type="number" id="a-dano" value="2026" min="2024" max="2030" onchange="renderDiario('auxiliar')" style="width:70px">
+        </div>
+        <div class="hist-table-wrap" style="padding-top:8px"><table class="hist-table">
+          <thead><tr><th>Data</th>${histKeys.map(k=>`<th>${METAS_A_ATUAL[k].label}</th>`).join('')}</tr></thead>
+          <tbody id="a-hist-diario-body"></tbody>
+        </table></div>
+      </div>
+    </div>`;
+}
+
+// ══ CARREGAR APP ══
+window.carregarApp = async () => {
+  if(setorAtual==='geral'){ await carregarGeral(); return; }
+  const mes=parseInt(document.getElementById('app-mes').value);
+  const ano=parseInt(document.getElementById('app-ano').value);
+  if(roleAtual==='gestor') await carregarGestor(mes, ano);
+  else await carregarAuxiliar(mes, ano);
+};
+
+async function carregarGestor(mes, ano) {
+  const s=SETORES_DEF[setorAtual];
+  const el=id=>document.getElementById(id);
+  el('g-loading').style.display='block'; el('g-cards').style.display='none'; el('g-total').style.display='none';
+  let q=query(collection(db,s.colGestor),where('mes','==',mes),where('ano','==',ano));
+  const snap=await getDocs(q);
+  const dados=snap.docs.map(d=>d.data());
+  const totais=agregarMes(dados, METAS_G_ATUAL);
+  el('g-loading').style.display='none'; el('g-cards').style.display='grid'; el('g-total').style.display='flex';
+  el('g-cards').innerHTML=renderCards(totais, METAS_G_ATUAL);
+  el('g-total-val').textContent=fmtBonif(calcTotalBonif(totais, METAS_G_ATUAL));
+  const hoje=new Date().toISOString().slice(0,10);
+  el('lanc-hoje-g').innerHTML=`Lançamentos hoje: <span>${dados.filter(d=>d.data===hoje).length}</span>`;
+  await Promise.all([carregarAuxView(mes,ano), renderDashboardGestor(mes,ano), carregarHistGestor(ano)]);
+}
+
+async function carregarAuxiliar(mes, ano) {
+  const s=SETORES_DEF[setorAtual];
+  let q=query(collection(db,s.colAuxiliar),where('mes','==',mes),where('ano','==',ano));
+  if(colaboradorAtual) q=query(collection(db,s.colAuxiliar),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colaboradorAtual));
+  const el=id=>document.getElementById(id);
+  el('a-loading').style.display='block'; el('a-cards').style.display='none'; el('a-total').style.display='none';
+  const snap=await getDocs(q);
+  const dados=snap.docs.map(d=>d.data());
+  const totais=agregarMes(dados, METAS_A_ATUAL);
+  el('a-loading').style.display='none'; el('a-cards').style.display='grid'; el('a-total').style.display='flex';
+  el('a-cards').innerHTML=renderCards(totais, METAS_A_ATUAL);
+  el('a-total-val').textContent=fmtBonif(calcTotalBonif(totais, METAS_A_ATUAL));
+  const hoje=new Date().toISOString().slice(0,10);
+  el('lanc-hoje-a').innerHTML=`Lançamentos hoje: <span>${dados.filter(d=>d.data===hoje).length}</span>`;
+  await carregarHistAuxiliar(ano);
+}
+
+// ── Render Cards ──
+function renderCards(totais, metas) {
+  return Object.keys(metas).map(k=>{
+    const m=metas[k]; const v=totais[k]; const nivel=avaliar(k,v,metas); const bonif=calcBonif(nivel,m.bonif);
+    const metaStr=m.tipo==='maior'?`Meta: Bronze ≥${m.bronze}${m.unit} · Prata ≥${m.prata}${m.unit} · Ouro ${m.ouro}${m.unit}`:`Meta: Bronze ≤${m.bronze}${m.unit} · Prata ≤${m.prata}${m.unit} · Ouro ${m.ouro}${m.unit}`;
+    return `<div class="ind-card ${nivel}">
+      <div class="nome">${m.label}</div>
+      <div class="valor">${fmtVal(v,m.unit)}</div>
+      <div class="nivel-row">
+        <span class="badge ${nivel}">${nivel==='sem-dado'?'—':nivel==='Fora'?'⚠️ Fora':nivel}</span>
+        <span class="bonif-val">${nivel!=='sem-dado'&&nivel!=='Fora'?fmtBonif(bonif):''}</span>
+      </div>
+      <div class="meta-row">${metaStr}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Aux View (ranking) ──
+async function carregarAuxView(mes, ano) {
+  const s=SETORES_DEF[setorAtual];
+  const el=id=>document.getElementById(id);
+  if(!el('g-aux-loading')) return;
+  el('g-aux-loading').style.display='block'; el('g-aux-ranking').innerHTML=''; el('g-aux-total').style.display='none';
+  let colabs=[]; let totalGeral=0;
+  if(s.temAuxMultiplos){
+    try{ const snap=await getDoc(doc(db,'config',s.configColabs)); colabs=snap.exists()?(snap.data().lista||[]):['Auxiliar']; }
+    catch(e){ colabs=['Auxiliar']; }
+  } else { colabs=[null]; }
+  const niveisColor={Ouro:'var(--ouro)',Prata:'var(--prata)',Bronze:'var(--bronze)',Fora:'var(--muted)','sem-dado':'var(--muted)'};
+  const niveisLabel={Ouro:'🥇 Ouro',Prata:'🥈 Prata',Bronze:'🥉 Bronze',Fora:'⚠️ Fora','sem-dado':'—'};
+  let html='';
+  for(const colab of colabs){
+    let q=query(collection(db,s.colAuxiliar),where('mes','==',mes),where('ano','==',ano));
+    if(colab) q=query(collection(db,s.colAuxiliar),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colab));
+    const snap=await getDocs(q);
+    const dados=snap.docs.map(d=>d.data());
+    const totais=agregarMes(dados, METAS_A_ATUAL);
+    const bonif=calcTotalBonif(totais, METAS_A_ATUAL);
+    totalGeral+=bonif;
+    const semLanc=dados.length===0;
+    const indsHtml=Object.keys(METAS_A_ATUAL).map(k=>{
+      const nv=avaliar(k,totais[k],METAS_A_ATUAL);
+      return `<div class="rc-ind"><div class="ri-label">${METAS_A_ATUAL[k].label}</div><div class="ri-val" style="color:${niveisColor[nv]}">${fmtVal(totais[k],METAS_A_ATUAL[k].unit)}</div><div style="font-size:.68rem;color:var(--muted)">${niveisLabel[nv]}</div></div>`;
+    }).join('');
+    html+=`<div class="rank-card">
+      <div class="rc-header">
+        <span class="rc-nome">👤 ${colab||'Auxiliar'}</span>
+        ${semLanc?'<span style="font-size:.78rem;color:var(--muted);font-style:italic">Sem lançamento</span>':`<span class="rc-bonif">${fmtBonif(bonif)}</span>`}
+      </div>
+      ${semLanc?'':`<div class="rc-inds">${indsHtml}</div>`}
+    </div>`;
+  }
+  el('g-aux-loading').style.display='none';
+  el('g-aux-ranking').innerHTML=html;
+  el('g-aux-total').style.display='flex';
+  el('g-aux-total-val').textContent=fmtBonif(totalGeral);
+}
+
+// ── Dashboard Gestor ──
+async function renderDashboardGestor(mes, ano) {
+  const s=SETORES_DEF[setorAtual]; const el=id=>document.getElementById(id);
+  if(!el('dk-g')) return;
+  const snapG=await getDocs(query(collection(db,s.colGestor),where('mes','==',mes),where('ano','==',ano)));
+  const tG=agregarMes(snapG.docs.map(d=>d.data()), METAS_G_ATUAL);
+  const bG=calcTotalBonif(tG, METAS_G_ATUAL);
+  let snapA=await getDocs(query(collection(db,s.colAuxiliar),where('mes','==',mes),where('ano','==',ano)));
+  let colabs=[null];
+  if(s.temAuxMultiplos){ try{ const sc=await getDoc(doc(db,'config',s.configColabs)); colabs=sc.exists()?(sc.data().lista||[null]):[null]; }catch(e){} }
+  let bA=0;
+  for(const colab of colabs){
+    let q=query(collection(db,s.colAuxiliar),where('mes','==',mes),where('ano','==',ano));
+    if(colab) q=query(collection(db,s.colAuxiliar),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colab));
+    const sn=await getDocs(q); bA+=calcTotalBonif(agregarMes(sn.docs.map(d=>d.data()),METAS_A_ATUAL),METAS_A_ATUAL);
+  }
+  const ouroG=Object.keys(METAS_G_ATUAL).filter(k=>avaliar(k,tG[k],METAS_G_ATUAL)==='Ouro').length;
+  el('dk-g').textContent=fmtBonif(bG); el('dk-a').textContent=fmtBonif(bA);
+  el('dk-tot').textContent=fmtBonif(bG+bA); el('dk-ouro').textContent=`${ouroG}/${Object.keys(METAS_G_ATUAL).length}`;
+  el('dash-bars-g').innerHTML=Object.keys(METAS_G_ATUAL).map(k=>{
+    const nv=avaliar(k,tG[k],METAS_G_ATUAL); const pct=nv==='Ouro'?100:nv==='Prata'?70:nv==='Bronze'?45:20;
+    return `<div class="nivel-bar-row"><span class="nb-label">${METAS_G_ATUAL[k].label}</span><div class="nb-track"><div class="nb-fill ${nv}" style="width:${pct}%">${nv}</div></div></div>`;
+  }).join('');
+  const niveis=Object.keys(METAS_G_ATUAL).map(k=>avaliar(k,tG[k],METAS_G_ATUAL));
+  const cnt=n=>niveis.filter(x=>x===n).length;
+  el('dash-placar').innerHTML=`
+    <div class="placar-card ouro"><div class="pc-num">${cnt('Ouro')}</div><div class="pc-lbl">Ouro</div></div>
+    <div class="placar-card prata"><div class="pc-num">${cnt('Prata')}</div><div class="pc-lbl">Prata</div></div>
+    <div class="placar-card bronze"><div class="pc-num">${cnt('Bronze')}</div><div class="pc-lbl">Bronze</div></div>
+    <div class="placar-card fora"><div class="pc-num">${cnt('Fora')}</div><div class="pc-lbl">Fora</div></div>`;
+  const grafG=[],grafA=[];
+  for(let m=1;m<=12;m++){
+    const sg=await getDocs(query(collection(db,s.colGestor),where('mes','==',m),where('ano','==',ano)));
+    grafG.push(calcTotalBonif(agregarMes(sg.docs.map(d=>d.data()),METAS_G_ATUAL),METAS_G_ATUAL));
+    const sa=await getDocs(query(collection(db,s.colAuxiliar),where('mes','==',m),where('ano','==',ano)));
+    grafA.push(calcTotalBonif(agregarMes(sa.docs.map(d=>d.data()),METAS_A_ATUAL),METAS_A_ATUAL));
+  }
+  renderGrafico('dash-chart', grafG, grafA);
+  el('dash-legend').innerHTML='<span>🟡 Gestor</span><span>🔵 Auxiliar</span>';
+}
+
+function renderGrafico(svgId, ser1, ser2) {
+  const svg=document.getElementById(svgId); if(!svg) return;
+  const W=700,H=180,PAD=30,BOT=20;
+  const max=Math.max(...ser1,...ser2,1);
+  const x=i=>PAD+i*(W-PAD*2)/11;
+  const y=v=>PAD+(1-v/max)*(H-PAD-BOT);
+  const pts=s=>s.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+  const labels=['J','F','M','A','M','J','J','A','S','O','N','D'].map((l,i)=>`<text x="${x(i)}" y="${H-4}" fill="#555" font-size="11" text-anchor="middle">${l}</text>`).join('');
+  svg.innerHTML=`
+    <polyline fill="none" stroke="#C9A84C" stroke-width="2.5" stroke-linejoin="round" points="${pts(ser1)}"/>
+    <polyline fill="none" stroke="#6b8cff" stroke-width="2.5" stroke-linejoin="round" points="${pts(ser2)}"/>
+    ${ser1.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#C9A84C"/>`).join('')}
+    ${ser2.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#6b8cff"/>`).join('')}
+    ${labels}`;
+}
+
+// ── Histórico ──
+async function carregarHistGestor(ano) {
+  const s=SETORES_DEF[setorAtual];
+  const snap=await getDocs(query(collection(db,s.colGestor),where('ano','==',ano)));
+  const dados=snap.docs.map(d=>d.data());
+  const el=document.getElementById('g-hist-body'); if(!el) return;
+  el.innerHTML=MESES_NOME.map((nm,i)=>{
+    const lancs=dados.filter(d=>d.mes===(i+1));
+    const t=agregarMes(lancs,METAS_G_ATUAL); const bonif=calcTotalBonif(t,METAS_G_ATUAL);
+    return `<tr><td>${nm}</td>${Object.keys(METAS_G_ATUAL).map(k=>`<td class="nivel ${avaliar(k,t[k],METAS_G_ATUAL)}">${fmtVal(t[k],METAS_G_ATUAL[k].unit)}</td>`).join('')}<td>${fmtBonif(bonif)}</td></tr>`;
+  }).join('');
+}
+async function carregarHistAuxiliar(ano) {
+  const s=SETORES_DEF[setorAtual];
+  let q=query(collection(db,s.colAuxiliar),where('ano','==',ano));
+  if(colaboradorAtual) q=query(collection(db,s.colAuxiliar),where('ano','==',ano),where('colaborador','==',colaboradorAtual));
+  const snap=await getDocs(q);
+  const dados=snap.docs.map(d=>d.data());
+  const el=document.getElementById('a-hist-body'); if(!el) return;
+  el.innerHTML=MESES_NOME.map((nm,i)=>{
+    const lancs=dados.filter(d=>d.mes===(i+1));
+    const t=agregarMes(lancs,METAS_A_ATUAL); const bonif=calcTotalBonif(t,METAS_A_ATUAL);
+    return `<tr><td>${nm}</td>${Object.keys(METAS_A_ATUAL).map(k=>`<td class="nivel ${avaliar(k,t[k],METAS_A_ATUAL)}">${fmtVal(t[k],METAS_A_ATUAL[k].unit)}</td>`).join('')}<td>${fmtBonif(bonif)}</td></tr>`;
+  }).join('');
+}
+window.renderDiario = async (tipo) => {
+  const s=SETORES_DEF[setorAtual];
+  const isG=tipo==='gestor';
+  const mes=parseInt(document.getElementById(isG?'g-dmes':'a-dmes').value);
+  const ano=parseInt(document.getElementById(isG?'g-dano':'a-dano').value);
+  const col=isG?s.colGestor:s.colAuxiliar;
+  const metas=isG?METAS_G_ATUAL:METAS_A_ATUAL;
+  let q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano),orderBy('data','asc'));
+  if(!isG&&colaboradorAtual) q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colaboradorAtual),orderBy('data','asc'));
+  const snap=await getDocs(q);
+  const dados=snap.docs.map(d=>d.data()); const keys=Object.keys(metas);
+  const tbody=document.getElementById(isG?'g-hist-diario-body':'a-hist-diario-body'); if(!tbody) return;
+  tbody.innerHTML=dados.length?dados.map(l=>`<tr><td>${l.data||'—'}</td>${keys.map(k=>`<td>${fmtVal(l[k],metas[k].unit)}</td>`).join('')}</tr>`).join('')
+    :`<tr><td colspan="${keys.length+1}" style="color:var(--muted);text-align:center;padding:20px">Sem lançamentos</td></tr>`;
+};
+
+// ── Visão Geral (Ítalo) ──
+async function carregarGeral() {
+  const mes=parseInt(document.getElementById('app-mes').value);
+  const ano=parseInt(document.getElementById('app-ano').value);
+  const el=id=>document.getElementById(id);
+  const setoresAtivos=Object.entries(SETORES_DEF).filter(([,s])=>s.status==='ativo');
+  let totalBonifGeral=0, totalOuro=0, totalInds=0;
+  let html='';
+  for(const [key,s] of setoresAtivos){
+    const snapG=await getDocs(query(collection(db,s.colGestor),where('mes','==',mes),where('ano','==',ano)));
+    const tG=agregarMes(snapG.docs.map(d=>d.data()),s.metas_g);
+    const bG=calcTotalBonif(tG,s.metas_g);
+    totalBonifGeral+=bG;
+    const ouroG=Object.keys(s.metas_g).filter(k=>avaliar(k,tG[k],s.metas_g)==='Ouro').length;
+    totalOuro+=ouroG; totalInds+=Object.keys(s.metas_g).length;
+    const barsHtml=Object.keys(s.metas_g).slice(0,4).map(k=>{
+      const nv=avaliar(k,tG[k],s.metas_g); const pct=nv==='Ouro'?100:nv==='Prata'?70:nv==='Bronze'?45:nv==='Fora'?20:10;
+      return `<div class="soc-bar"><span class="sb-label">${s.metas_g[k].label}</span><div class="sb-track"><div class="sb-fill ${nv}" style="width:${pct}%"></div></div></div>`;
+    }).join('');
+    html+=`<div class="setor-overview-card" onclick="">
+      <div class="soc-header">
+        <div class="soc-nome">${s.icon} ${s.nome}</div>
+        <span style="font-size:.75rem;color:var(--muted)">${s.gestor}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:.78rem;color:var(--muted)">Bonif. Gestor</span>
+        <span class="soc-bonif">${fmtBonif(bG)}</span>
+      </div>
+      <div class="soc-mini-bars">${barsHtml}</div>
+      <div style="margin-top:8px;font-size:.72rem;color:var(--muted)">${ouroG}/${Object.keys(s.metas_g).length} indicadores Ouro</div>
+    </div>`;
+  }
+  Object.entries(SETORES_DEF).filter(([,s])=>s.status==='em_breve').forEach(([,s])=>{
+    html+=`<div class="setor-overview-card em-breve">
+      <div class="soc-header"><div class="soc-nome">${s.icon} ${s.nome}</div><span style="font-size:.72rem;color:var(--gold);background:#1e1600;border:1px solid var(--gold);border-radius:20px;padding:2px 8px">Em breve</span></div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:6px">Gestor: ${s.gestor}</div>
+    </div>`;
+  });
+  if(el('geral-setores')) el('geral-setores').innerHTML=html;
+  if(el('geral-kpis')) el('geral-kpis').innerHTML=`
+    <div class="dash-kpi"><div class="dk-label">Total Bonif. Gestores</div><div class="dk-val">${fmtBonif(totalBonifGeral)}</div><div class="dk-sub">setores ativos</div></div>
+    <div class="dash-kpi"><div class="dk-label">Setores Ativos</div><div class="dk-val" style="color:var(--success)">${setoresAtivos.length}</div><div class="dk-sub">de ${Object.keys(SETORES_DEF).length} total</div></div>
+    <div class="dash-kpi"><div class="dk-label">Indicadores Ouro</div><div class="dk-val" style="color:var(--ouro)">${totalOuro}/${totalInds}</div><div class="dk-sub">todos os setores</div></div>`;
+}
+
+// ── Modais ──
+window.abrirModal = (tipo) => {
+  const metas=tipo==='gestor'?METAS_G_ATUAL:METAS_A_ATUAL;
+  document.getElementById('modal-lancar-titulo').textContent=`📋 Lançar — ${tipo==='gestor'?SETORES_DEF[setorAtual].gestor:colaboradorAtual||'Auxiliar'}`;
+  document.getElementById('lancar-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('lancar-campos').innerHTML=Object.keys(metas).map(k=>`
+    <div class="form-group">
+      <label>${metas[k].label} (${metas[k].unit})</label>
+      <input type="number" id="lancar-${k}" placeholder="—" min="0" step="${metas[k].unit==='%'?'0.1':'1'}">
+      <span class="hint">${metas[k].tipo==='maior'?`Bronze ≥${metas[k].bronze} · Prata ≥${metas[k].prata} · Ouro ${metas[k].ouro}`:`Bronze ≤${metas[k].bronze} · Prata ≤${metas[k].prata} · Ouro ${metas[k].ouro}`}</span>
+    </div>`).join('');
+  document.getElementById('modal-lancar').dataset.tipo=tipo;
+  document.getElementById('modal-lancar').classList.add('open');
+};
+window.salvarLancamento = async () => {
+  const tipo=document.getElementById('modal-lancar').dataset.tipo;
+  const s=SETORES_DEF[setorAtual];
+  const metas=tipo==='gestor'?METAS_G_ATUAL:METAS_A_ATUAL;
+  const col=tipo==='gestor'?s.colGestor:s.colAuxiliar;
+  const data={
+    data:document.getElementById('lancar-data').value,
+    mes:parseInt(document.getElementById('app-mes').value),
+    ano:parseInt(document.getElementById('app-ano').value),
+  };
+  if(tipo==='auxiliar'&&colaboradorAtual) data.colaborador=colaboradorAtual;
+  Object.keys(metas).forEach(k=>{ const el=document.getElementById(`lancar-${k}`); data[k]=el&&el.value!==''?parseFloat(el.value):null; });
+  try{ await addDoc(collection(db,col),data); fecharModais(); toast('✅ Lançamento salvo!'); await carregarApp(); }
+  catch(e){ toast('❌ Erro ao salvar'); }
+};
+window.abrirModalLimpar = () => { document.getElementById('limpar-input').value=''; document.getElementById('limpar-err').textContent=''; document.getElementById('modal-limpar').classList.add('open'); };
+window.confirmarLimpar = async () => {
+  if(document.getElementById('limpar-input').value!=='CONFIRMAR'){document.getElementById('limpar-err').textContent='Digite CONFIRMAR';return;}
+  const s=SETORES_DEF[setorAtual];
+  try{
+    const [sG,sA]=await Promise.all([getDocs(collection(db,s.colGestor)),getDocs(collection(db,s.colAuxiliar))]);
+    await Promise.all([...sG.docs.map(d=>deleteDoc(doc(db,s.colGestor,d.id))),...sA.docs.map(d=>deleteDoc(doc(db,s.colAuxiliar,d.id)))]);
+    fecharModais(); toast(`✅ ${sG.size+sA.size} lançamentos apagados`); await carregarApp();
+  }catch(e){document.getElementById('limpar-err').textContent='Erro ao apagar';}
+};
+
+// ── Config ──
+function renderCfgMetasGestor() {
+  const el=document.getElementById('cfg-metas-g'); if(!el) return;
+  el.innerHTML=Object.keys(METAS_G_ATUAL).map(k=>{
+    const m=METAS_G_ATUAL[k];
+    return `<div style="margin-bottom:10px"><p style="font-size:.75rem;color:var(--muted);margin-bottom:4px">${m.label}</p>
+      <div class="metas-grid"><div><label>Bronze</label><input type="number" id="mg-${k}-b" value="${m.bronze}" step="0.1"></div><div><label>Prata</label><input type="number" id="mg-${k}-p" value="${m.prata}" step="0.1"></div><div><label>Ouro</label><input type="number" id="mg-${k}-o" value="${m.ouro}" step="0.1"></div></div></div>`;
+  }).join('');
+}
+function renderCfgMetasAuxiliar() {
+  const el=document.getElementById('cfg-metas-a'); if(!el) return;
+  el.innerHTML=Object.keys(METAS_A_ATUAL).map(k=>{
+    const m=METAS_A_ATUAL[k];
+    return `<div style="margin-bottom:10px"><p style="font-size:.75rem;color:var(--muted);margin-bottom:4px">${m.label}</p>
+      <div class="metas-grid"><div><label>Bronze</label><input type="number" id="ma-${k}-b" value="${m.bronze}" step="0.1"></div><div><label>Prata</label><input type="number" id="ma-${k}-p" value="${m.prata}" step="0.1"></div><div><label>Ouro</label><input type="number" id="ma-${k}-o" value="${m.ouro}" step="0.1"></div></div></div>`;
+  }).join('');
+}
+window.salvarMetasGestor = async () => {
+  const s=SETORES_DEF[setorAtual];
+  Object.keys(METAS_G_ATUAL).forEach(k=>{
+    const b=document.getElementById(`mg-${k}-b`),p=document.getElementById(`mg-${k}-p`),o=document.getElementById(`mg-${k}-o`);
+    if(b)METAS_G_ATUAL[k].bronze=parseFloat(b.value); if(p)METAS_G_ATUAL[k].prata=parseFloat(p.value); if(o)METAS_G_ATUAL[k].ouro=parseFloat(o.value);
+  });
+  const obj={}; Object.keys(METAS_G_ATUAL).forEach(k=>obj[k]={bronze:METAS_G_ATUAL[k].bronze,prata:METAS_G_ATUAL[k].prata,ouro:METAS_G_ATUAL[k].ouro});
+  await setDoc(doc(db,'config',s.configMetasG),obj); toast('✅ Metas Gestor salvas!');
+};
+window.salvarMetasAuxiliar = async () => {
+  const s=SETORES_DEF[setorAtual];
+  Object.keys(METAS_A_ATUAL).forEach(k=>{
+    const b=document.getElementById(`ma-${k}-b`),p=document.getElementById(`ma-${k}-p`),o=document.getElementById(`ma-${k}-o`);
+    if(b)METAS_A_ATUAL[k].bronze=parseFloat(b.value); if(p)METAS_A_ATUAL[k].prata=parseFloat(p.value); if(o)METAS_A_ATUAL[k].ouro=parseFloat(o.value);
+  });
+  const obj={}; Object.keys(METAS_A_ATUAL).forEach(k=>obj[k]={bronze:METAS_A_ATUAL[k].bronze,prata:METAS_A_ATUAL[k].prata,ouro:METAS_A_ATUAL[k].ouro});
+  await setDoc(doc(db,'config',s.configMetasA),obj); toast('✅ Metas Auxiliar salvas!');
+};
+window.salvarSenhasSetor = async () => {
+  const s=SETORES_DEF[setorAtual];
+  const g=document.getElementById('cfg-g-senha-g').value, a=document.getElementById('cfg-g-senha-a').value;
+  const snap=await getDoc(doc(db,'config',s.configSenhas));
+  const atual=snap.exists()?snap.data():{gestor:'gestor123',auxiliar:'auxiliar123',admin:'admin123'};
+  if(g)atual.gestor=g; if(a)atual.auxiliar=a;
+  await setDoc(doc(db,'config',s.configSenhas),atual); toast('✅ Senhas salvas!');
+};
+function renderApiUrls() {
+  const s=SETORES_DEF[setorAtual]; const el=document.getElementById('cfg-api-urls'); if(!el||!s) return;
+  const key='AIzaSyDTqmtUcFa2EZTD304RYb_vb6BLvo9PknQ';
+  el.innerHTML=`
+    <p style="font-size:.72rem;color:var(--gold);margin-bottom:4px">Gestor:</p>
+    <div class="api-box" id="api-g">https://firestore.googleapis.com/v1/projects/jr-banho/databases/(default)/documents/${s.colGestor}?key=${key}</div>
+    <button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('api-g').textContent).then(()=>toast('✅ Copiado!'))">Copiar</button>
+    <p style="font-size:.72rem;color:var(--gold);margin:10px 0 4px">Auxiliar:</p>
+    <div class="api-box" id="api-a">https://firestore.googleapis.com/v1/projects/jr-banho/databases/(default)/documents/${s.colAuxiliar}?key=${key}</div>
+    <button class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('api-a').textContent).then(()=>toast('✅ Copiado!'))">Copiar</button>`;
+}
+
+// ── Config Geral ──
+function renderCfgGestores() {
+  const el=document.getElementById('cfg-gestores-list'); if(!el) return;
+  el.innerHTML=`<div class="config-grid">${Object.entries(SETORES_DEF).map(([key,s])=>`
+    <div><label>${s.icon} ${s.nome}</label><input type="text" id="cfg-gest-${key}" value="${s.gestor}" placeholder="Nome do gestor"></div>`).join('')}</div>`;
+}
+window.salvarGestores = async () => {
+  const obj={};
+  Object.keys(SETORES_DEF).forEach(key=>{ const el=document.getElementById(`cfg-gest-${key}`); if(el){ SETORES_DEF[key].gestor=el.value; obj[key]=el.value; } });
+  await setDoc(doc(db,'config','nomes_gestores'),obj); toast('✅ Nomes salvos!');
+};
+window.salvarSenhasGeral = async () => {
+  const g=document.getElementById('cfg-senha-geral').value, adm=document.getElementById('cfg-senha-admin').value;
+  const snap=await getDoc(doc(db,'config','senhas_geral'));
+  const atual=snap.exists()?snap.data():{gestor:'admin123',admin:'admin123'};
+  if(g)atual.gestor=g; if(adm)atual.admin=adm;
+  await setDoc(doc(db,'config','senhas_geral'),atual); toast('✅ Senhas da gestão salvas!');
+};
+async function carregarColabsConfig(key) {
+  const s=SETORES_DEF[key];
+  const el=document.getElementById(`colabs-${key}`); if(!el) return;
+  try{ const snap=await getDoc(doc(db,'config',s.configColabs)); colabsAtuais=snap.exists()?(snap.data().lista||[]):[];
+  }catch(e){ colabsAtuais=[]; }
+  renderColabsList(`colabs-${key}`, colabsAtuais);
+}
+async function carregarColabsSetor() {
+  const s=SETORES_DEF[setorAtual];
+  const el=document.getElementById('colabs-setor'); if(!el) return;
+  try{ const snap=await getDoc(doc(db,'config',s.configColabs)); colabsAtuais=snap.exists()?(snap.data().lista||[]):[];
+  }catch(e){ colabsAtuais=[]; }
+  renderColabsList('colabs-setor', colabsAtuais);
+}
+function renderColabsList(elId, lista) {
+  const el=document.getElementById(elId); if(!el) return;
+  el.innerHTML=lista.map((n,i)=>`<div class="colab-row"><input type="text" value="${n}" onchange="updateColab(${i},this.value,'${elId}')"><button class="btn-rm" onclick="removeColab(${i},'${elId}')">✕</button></div>`).join('');
+}
+window.updateColab=(i,v,elId)=>{ colabsAtuais[i]=v; };
+window.removeColab=(i,elId)=>{ colabsAtuais.splice(i,1); renderColabsList(elId,colabsAtuais); };
+window.addColab=(key)=>{ colabsAtuais.push('Novo Auxiliar'); renderColabsList(`colabs-${key}`,colabsAtuais); };
+window.addColabSetor=()=>{ colabsAtuais.push('Novo Auxiliar'); renderColabsList('colabs-setor',colabsAtuais); };
+window.salvarColabs=async(key)=>{ const s=SETORES_DEF[key]; await setDoc(doc(db,'config',s.configColabs),{lista:colabsAtuais}); toast('✅ Auxiliares salvos!'); };
+window.salvarColabsSetor=async()=>{ const s=SETORES_DEF[setorAtual]; await setDoc(doc(db,'config',s.configColabs),{lista:colabsAtuais}); toast('✅ Auxiliares salvos!'); };
+
+// ── Tabs & Histórico ──
+window.showTab=(tab,btn)=>{
+  document.querySelectorAll('#app-tab-contents .tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#app-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById(`tab-${tab}`); if(el) el.classList.add('active');
+  btn.classList.add('active');
+};
+window.switchHist=(prefix,mode,btn)=>{
+  document.querySelectorAll(`#tab-${prefix}-hist .htog-btn`).forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  document.getElementById(`${prefix}-hist-mensal`).style.display=mode==='mensal'?'block':'none';
+  document.getElementById(`${prefix}-hist-diario`).style.display=mode==='diario'?'block':'none';
+};
+
+// ── Carregar nomes personalizados ──
+async function carregarNomesGestores() {
+  try{
+    const snap=await getDoc(doc(db,'config','nomes_gestores'));
+    if(snap.exists()) Object.entries(snap.data()).forEach(([k,v])=>{ if(SETORES_DEF[k]) SETORES_DEF[k].gestor=v; });
+  }catch(e){}
+}
+carregarNomesGestores();
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+</body>
+</html>
