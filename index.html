@@ -790,11 +790,9 @@ window.loginGeral = async () => {
   if(!senha){err.textContent='Digite a senha';return;}
   try {
     const snap = await getDoc(doc(db,'config','senhas_geral'));
-    const s = snap.exists()?snap.data():{gestor:'admin123',admin:'admin123',supervisor_daiane:'daiane123'};
-    if(!s.supervisor_daiane){ s.supervisor_daiane='daiane123'; await setDoc(doc(db,'config','senhas_geral'),s); }
-    else if(!snap.exists()) await setDoc(doc(db,'config','senhas_geral'),s);
+    const s = snap.exists()?snap.data():{gestor:'admin123',admin:'admin123'};
+    if(!snap.exists()) await setDoc(doc(db,'config','senhas_geral'),s);
     if(senha===s.gestor){ geralLogado=true; supervisorSetores=null; supervisorNome='Ítalo'; atualizarTopbarUser('Ítalo','geral'); renderGeralLogado(); }
-    else if(senha===s.supervisor_daiane){ geralLogado=true; supervisorSetores=['financeiro','comercial']; supervisorNome='Daiane'; atualizarTopbarUser('Daiane','geral'); renderGeralLogado(); }
     else err.textContent='Senha incorreta';
   } catch(e){ err.textContent='Erro de conexão'; }
 };
