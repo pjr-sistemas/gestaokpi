@@ -944,7 +944,7 @@ function renderSetorLogado() {
         </div>
         <div id="hist-mensal">
           <div class="hist-table-wrap"><table class="hist-table">
-            <thead><tr><th>Mês</th>${histKeys.map(k=>`<th>${metas[k].label}</th>`).join('')}<th>Bonif.</th></tr></thead>
+            <thead><tr><th>Mês</th>${histKeys.map(k=>`<th>${metas[k].label}</th>`).join('')}<th>Bonif.</th><th></th></tr></thead>
             <tbody id="hist-body"></tbody>
           </table></div>
         </div>
@@ -955,7 +955,7 @@ function renderSetorLogado() {
             <button class="btn-gold-sm" onclick="renderDiario()">Buscar</button>
           </div>
           <div class="hist-table-wrap"><table class="hist-table">
-            <thead><tr><th>Data</th>${histKeys.map(k=>`<th>${metas[k].label}</th>`).join('')}</tr></thead>
+            <thead><tr><th>Data</th>${histKeys.map(k=>`<th>${metas[k].label}</th>`).join('')}<th></th></tr></thead>
             <tbody id="hist-diario-body"></tbody>
           </table></div>
         </div>
@@ -1143,9 +1143,22 @@ async function carregarHistMensal(ano) {
   const el=document.getElementById('hist-body'); if(!el) return;
   el.innerHTML=MESES.map((nm,i)=>{
     const lancs=dados.filter(d=>d.mes===(i+1)); const t=agregarMes(lancs,metas); const bonif=calcTotal(t,metas);
-    return `<tr><td>${nm}</td>${Object.keys(metas).map(k=>`<td class="nv ${avaliar(k,t[k],metas)}">${fmtVal(t[k],metas[k].unit)}</td>`).join('')}<td>${fmtBonif(bonif)}</td></tr>`;
+    return `<tr><td>${nm}</td>${Object.keys(metas).map(k=>`<td class="nv ${avaliar(k,t[k],metas)}">${fmtVal(t[k],metas[k].unit)}</td>`).join('')}<td>${fmtBonif(bonif)}</td><td>${lancs.length?`<button class="btn-rm" onclick="excluirMesHist(${i+1})" title="Excluir lançamentos deste mês">✕</button>`:''}</td></tr>`;
   }).join('');
 }
+window.excluirMesHist = async (mes) => {
+  const s=SD[setorLogado]; const col=roleLogado==='gestor'?s.colG:s.colA;
+  const ano=parseInt(document.getElementById('s-ano').value);
+  let q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano));
+  if(roleLogado==='auxiliar'&&colaborador) q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colaborador));
+  try{
+    const snap=await getDocs(q);
+    if(!snap.size){ toast('Nada para excluir neste mês'); return; }
+    if(!confirm(`Excluir os ${snap.size} lançamento(s) de ${MESES[mes-1]}/${ano}? Essa ação não pode ser desfeita.`)) return;
+    await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,col,d.id))));
+    toast('✅ Lançamentos do mês excluídos!'); await carregarSetor();
+  }catch(e){ toast('❌ Erro ao excluir'); }
+};
 window.renderDiario = async () => {
   const s=SD[setorLogado]; const metas=roleLogado==='gestor'?MG:MA;
   const col=roleLogado==='gestor'?s.colG:s.colA;
@@ -1153,18 +1166,27 @@ window.renderDiario = async () => {
   const ano=parseInt(document.getElementById('hist-dano').value);
   const el=document.getElementById('hist-diario-body'); if(!el) return;
   const keys=Object.keys(metas);
-  el.innerHTML=`<tr><td colspan="${keys.length+1}" style="color:var(--muted);text-align:center;padding:20px">Carregando...</td></tr>`;
+  el.innerHTML=`<tr><td colspan="${keys.length+2}" style="color:var(--muted);text-align:center;padding:20px">Carregando...</td></tr>`;
   try{
     // sem orderBy no Firestore (evita índice composto) — ordena no cliente
     let q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano));
     if(roleLogado==='auxiliar'&&colaborador) q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colaborador));
     const snap=await getDocs(q);
-    const dados=snap.docs.map(d=>d.data()).sort((a,b)=>(a.data||'').localeCompare(b.data||''));
-    el.innerHTML=dados.length?dados.map(l=>`<tr><td>${l.data||'—'}</td>${keys.map(k=>`<td>${fmtVal(l[k],metas[k].unit)}</td>`).join('')}</tr>`).join('')
-      :`<tr><td colspan="${keys.length+1}" style="color:var(--muted);text-align:center;padding:20px">Sem lançamentos neste mês</td></tr>`;
+    const dados=snap.docs.map(d=>({_id:d.id,...d.data()})).sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+    el.innerHTML=dados.length?dados.map(l=>`<tr><td>${l.data||'—'}</td>${keys.map(k=>`<td>${fmtVal(l[k],metas[k].unit)}</td>`).join('')}<td><button class="btn-rm" onclick="excluirLancDiario('${l._id}')" title="Excluir lançamento">✕</button></td></tr>`).join('')
+      :`<tr><td colspan="${keys.length+2}" style="color:var(--muted);text-align:center;padding:20px">Sem lançamentos neste mês</td></tr>`;
   }catch(e){
-    el.innerHTML=`<tr><td colspan="${keys.length+1}" style="color:var(--danger);text-align:center;padding:20px">Erro ao carregar (${e.code||e.message})</td></tr>`;
+    el.innerHTML=`<tr><td colspan="${keys.length+2}" style="color:var(--danger);text-align:center;padding:20px">Erro ao carregar (${e.code||e.message})</td></tr>`;
   }
+};
+window.excluirLancDiario = async (id) => {
+  if(!confirm('Excluir este lançamento? Essa ação não pode ser desfeita.')) return;
+  const s=SD[setorLogado]; const col=roleLogado==='gestor'?s.colG:s.colA;
+  try{
+    await deleteDoc(doc(db,col,id));
+    toast('✅ Lançamento excluído!');
+    await renderDiario(); await carregarSetor();
+  }catch(e){ toast('❌ Erro ao excluir'); }
 };
 window.switchHist = (modo, btn) => {
   document.querySelectorAll('.htog-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
