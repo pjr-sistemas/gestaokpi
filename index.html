@@ -373,66 +373,63 @@ const SD = {
     cfgSenhas:'senhas', cfgColabs:'colaboradores', cfgMetasG:'metas_gestor', cfgMetasA:'metas_auxiliar',
     temMultiplosAux: true,
     mG:{
-      producao_kg: { label:'Produção Geral',         tipo:'maior', bronze:300,  prata:500,  ouro:625,  bonif:{bronze:12.5,prata:15,ouro:25},   agg:'sum', unit:'KG' },
-      retrabalho:  { label:'Retrabalho',              tipo:'menor', bronze:3,    prata:2,    ouro:0,    bonif:{bronze:12.5,prata:15,ouro:25},   agg:'sum', unit:'oc' },
-      erro_banho:  { label:'Erro Banho',              tipo:'menor', bronze:5,    prata:2,    ouro:0,    bonif:{bronze:12.5,prata:15,ouro:25},   agg:'sum', unit:'oc' },
-      inovacao:    { label:'Inovação e Criatividade', tipo:'maior', bronze:2,    prata:3,    ouro:4,    bonif:{bronze:12.5,prata:15,ouro:25},   agg:'sum', unit:'pt' },
-      checklist:   { label:'Checklist de Rotina',     tipo:'maior', bronze:85,   prata:90,   ouro:100,  bonif:{bronze:12.5,prata:15,ouro:25},   agg:'avg', unit:'%'  },
-      plano_desenv:{ label:'Pl. Desenvolvimento',     tipo:'maior', bronze:85,   prata:90,   ouro:100,  bonif:{bronze:12.5,prata:15,ouro:25},   agg:'avg', unit:'%'  },
-      estoque:     { label:'Controle de Estoque',     tipo:'maior', bronze:90,   prata:95,   ouro:100,  bonif:{bronze:12.5,prata:15,ouro:25},   agg:'avg', unit:'%'  },
+      producao_kg:  { label:'Produção (Geral)',            tipo:'maior', bronze:300, prata:500, ouro:625, bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'un' },
+      recuperacao:  { label:'Recuperação (Deplacagem)',    tipo:'maior', bronze:90,  prata:95,  ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      erro_banho:   { label:'Erro no Banho / Retrabalho',  tipo:'menor', bronze:3,   prata:2,   ouro:0,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      inovacao:     { label:'Inovação e Criatividade',     tipo:'maior', bronze:2,   prata:3,   ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      checklist:    { label:'Checklist de Rotina',         tipo:'maior', bronze:85,  prata:90,  ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      plano_desenv: { label:'Pl. Desenvolvimento e Talentos', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      controle_estoque:{ label:'Controle de Estoque',      tipo:'maior', bronze:90,  prata:95,  ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
     mA:{
-      producao_ind:{ label:'Produção Individual',     tipo:'maior', bronze:15,   prata:20,   ouro:25,   bonif:{bronze:12.5,prata:15,ouro:25},   agg:'sum', unit:'KG' },
-      erro_banho:  { label:'Erro Banho',              tipo:'menor', bronze:3,    prata:1,    ouro:0,    bonif:{bronze:12.5,prata:15,ouro:25},   agg:'sum', unit:'oc' },
-      inovacao:    { label:'Inovação e Criatividade', tipo:'maior', bronze:2,    prata:3,    ouro:4,    bonif:{bronze:12.5,prata:15,ouro:25},   agg:'sum', unit:'pt' },
-      retrabalho:  { label:'Retrabalho',              tipo:'menor', bronze:3,    prata:2,    ouro:0,    bonif:{bronze:12.5,prata:15,ouro:25},   agg:'sum', unit:'oc' },
+      producao_ind:{ label:'Produção Individual',                    tipo:'maior', bronze:15, prata:20, ouro:25, bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'un' },
+      erro_banho:  { label:'Erro Banho / Retrabalho',                tipo:'menor', bronze:3,  prata:2,  ouro:0,  bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      inovacao:    { label:'Inovação e Criatividade',                tipo:'maior', bronze:2,  prata:3,  ouro:4,  bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      engajamento_rotinas:{ label:'Taxa de Engajamento nas Rotinas do Setor', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
   },
   cadastro: {
-    icon:'📋', nome:'Cadastro', gestor:'Arthur', status:'ativo',
+    icon:'📋', nome:'Cadastro', gestor:'Adriano', status:'ativo',
     colG:'lancamentos_arthur', colA:'lancamentos_cicero',
     cfgSenhas:'senhas_cadastro', cfgColabs:'colaboradores_cadastro', cfgMetasG:'metas_gestor_cadastro', cfgMetasA:'metas_auxiliar_cadastro',
     temMultiplosAux: false,
     mG:{
-      erro_cadastro:   { label:'Erro de Cadastro',        tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'sum', unit:'oc' },
-      cadastros_realiz:{ label:'Cadastros Realizados',    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
-      inovacao:        { label:'Inovação e Criatividade', tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'sum', unit:'pt' },
-      plano_desenv:    { label:'Pl. Desenvolvimento',     tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
-      checklist:       { label:'Checklist de Rotina',     tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
-      ocorrencia:      { label:'Ocorrências',             tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'sum', unit:'oc' },
-      prazo_cadastro:  { label:'Prazo de Cadastro',       tipo:'menor', bronze:48, prata:24, ouro:12,  bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'h'  },
+      erro_cadastro:   { label:'Erro de Cadastro (atualização/digitação)', tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      cadastros_realiz:{ label:'Cadastros a Fazer x Realizados',           tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:        { label:'Inovação e Criatividade',                  tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      plano_desenv:    { label:'Pl. Desenvolvimento e Talentos',           tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      prazo_cadastro:  { label:'Prazo Médio de Cadastro',                  tipo:'menor', bronze:48, prata:24, ouro:12,  bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'h'  },
     },
     mA:{
-      atualizacao_cad:  { label:'Atualização Cadastral',  tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
-      tempo_atualizacao:{ label:'Tempo de Atualização',   tipo:'menor', bronze:48, prata:36, ouro:24,  bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'h'  },
-      erro_imagem:      { label:'Erro de Imagem',         tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
-      os_executadas:    { label:'OS Executadas',          tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
-      inovacao:         { label:'Inovação e Criatividade',tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'sum', unit:'pt' },
-      manutencao_ti:    { label:'Manutenção TI',          tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
-      banco_dados:      { label:'Banco de Dados',         tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:7.14,prata:10,ouro:14.29}, agg:'avg', unit:'%'  },
+      atualizacao_dias: { label:'Atualização de Cadastros em Dias',        tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      tempo_atualizacao:{ label:'Tempo Médio de Atualização',              tipo:'menor', bronze:48, prata:36, ouro:24,  bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'h'  },
+      erro_imagem:      { label:'Cadastro com Erro de Imagem ou Falta',    tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      planejado_exec:   { label:'Planejado x Executados',                  tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:         { label:'Inovação e Criatividade',                 tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      ti:               { label:'TI',                                      tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      banco_dados:      { label:'Índice de Atualização do Banco de Dados', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
   },
   estoque: {
-    icon:'📦', nome:'Estoque', gestor:'Adriana', status:'ativo',
+    icon:'📦', nome:'Almoxarifado', gestor:'Adriana', status:'ativo',
     colG:'lancamentos_adriana', colA:'lancamentos_rosangela',
     cfgSenhas:'senhas_estoque', cfgColabs:'colaboradores_estoque', cfgMetasG:'metas_gestor_estoque', cfgMetasA:'metas_auxiliar_estoque',
     temMultiplosAux: false,
     mG:{
-      cinco_s:           { label:'5S',                          tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      pecas_validadas:   { label:'Peças Criadas x Validadas',   tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      tempo_os:          { label:'Tempo Médio OS',              tipo:'menor', bronze:36, prata:24, ouro:12,  bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'h'  },
-      qualif_terceirizado:{label:'Qualif. Terceirizado',        tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      checklist:         { label:'Checklist de Rotina',         tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      inovacao:          { label:'Inovação e Criatividade',     tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'sum', unit:'pt' },
-      plano_desenv:      { label:'Pl. Desenvolvimento',         tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      controle_estoque:  { label:'Controle de Estoque',         tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      qualif_fornecedor: { label:'Qualif. Fornecedor x Compra', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      cinco_s:            { label:'5S Ambiente Operacional',      tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      pecas_validadas:    { label:'Peças Criadas x Validadas',    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      tempo_os:           { label:'Tempo Médio de Atendimento da OS', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      qualif_terceirizado:{ label:'Qualificação da Terceirizado', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      checklist:          { label:'Checklist de Rotina',         tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:           { label:'Inovação e Criatividade',     tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      plano_desenv:       { label:'Pl. Desenvolvimento e Talentos', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      controle_estoque:   { label:'Controle de Estoque',         tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
     mA:{
-      pecas_qualificadas:{ label:'Peças Enviadas x Qualificadas',tipo:'maior',bronze:90, prata:95, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-      inovacao:          { label:'Inovação e Criatividade',     tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'sum', unit:'pt' },
-      prod_demanda:      { label:'Produção da Demanda',         tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'sum', unit:'pt' },
-      cinco_s:           { label:'5S',                          tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
+      controle_producao:   { label:'Controle de Produção',                 tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:            { label:'Inovação e Criatividade',              tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      cinco_s:             { label:'5S Ambiente Operacional',              tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      engajamento_rotinas: { label:'Taxa de Engajamento nas Rotinas do Setor', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
   },
   portaria: {
@@ -440,22 +437,23 @@ const SD = {
     colG:'lancamentos_fernando', colA:'lancamentos_portaria_seg',
     cfgSenhas:'senhas_portaria', cfgColabs:'colaboradores_portaria', cfgMetasG:'metas_gestor_portaria', cfgMetasA:'metas_auxiliar_portaria',
     temMultiplosAux: true,
-    colabsDefault: ['Rogerio','George','Dvanildo','Sario Rafael','Rafael (Manutenção)','Cicero (T.I)'],
+    colabsDefault: ['Rogerio','George','Dvanildo','Sario Rafael','Rafael (Manutenção)'],
     mG:{
-      cinco_s:          { label:'5S Ambiente Operacional',          tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      orcamento_custo:  { label:'Meta Orçamento de Custo',          tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      tarefas_prazo:    { label:'% Tarefas Concluídas no Prazo',    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      inovacao:         { label:'Inovação e Criatividade',         tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'sum', unit:'pt' },
-      checklist:        { label:'Checklist de Rotina',             tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      plano_desenv:     { label:'Pl. Desenvolvimento e Talentos',  tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      reclam_seguranca: { label:'Reclam./Ocorr. Segurança',        tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'sum', unit:'oc' },
-      reclam_manutencao:{ label:'Reclam./Ocorr. Manutenção (Geral)',tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'sum', unit:'oc' },
+      cinco_s:          { label:'5S Ambiente Operacional',                    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      orcamento_custo:  { label:'Orçamentos de Custo de Serviços (mínimo 3)', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      tarefas_prazo:    { label:'% Tarefas Concluídas no Prazo',              tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:         { label:'Inovação e Criatividade',                    tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      checklist:        { label:'Checklist de Rotina',                        tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      plano_desenv:     { label:'Pl. Desenvolvimento e Talentos',             tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      reclam_seguranca: { label:'Reclam./Ocorr. Segurança',                   tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      reclam_manutencao:{ label:'Reclam./Ocorr. Manutenção (Geral)',          tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
     },
     mA:{
-      ocorrencias:   { label:'Ocorrências ou Reclamações',        tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-      rondas:        { label:'Cumprimento de Rondas e Vigilância',tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-      pontualidade:  { label:'Pontualidade e Assiduidade',        tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-      inovacao:      { label:'Inovação e Criatividade',           tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'sum', unit:'pt' },
+      ocorrencias:         { label:'Ocorrências ou Reclamações',                 tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      rondas:              { label:'Cumprimento de Rondas e Vigilância',         tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      pontualidade:        { label:'Pontualidade e Assiduidade',                 tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:            { label:'Inovação e Criatividade',                    tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      engajamento_rotinas: { label:'Taxa de Engajamento nas Rotinas do Setor',   tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
   },
   estoque_bruto: {
@@ -465,23 +463,21 @@ const SD = {
     temMultiplosAux: true,
     colabsDefault: ['Georgia','Juliana','Alana','Aila','Raimunda','Eliane','Antonia'],
     mG:{
-      lotes_qualificadas:{ label:'Lotes Enviados x Qualificadas',     tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      producao_solicit:  { label:'Produção Setor x Solicitado',       tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      prazo_producao:    { label:'Prazo de Produção Cumprido',        tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      inovacao:          { label:'Inovação e Criatividade',          tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'sum', unit:'pt' },
-      checklist:         { label:'Checklist de Rotina',              tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      plano_desenv:      { label:'Pl. Desenvolvimento e Talentos',   tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      envio_lotes_banho: { label:'Taxa Cumpr. Envio Lotes p/ Banho', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      erro_producao:     { label:'Erro Produção Setor',              tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'sum', unit:'oc' },
-      controle_estoque:  { label:'Controle de Estoque (Acuracidade)',tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      qualif_terceirizado:{ label:'Qualificação Terceirizado',                    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      producao_solicit:  { label:'Produção Setor x Solicitado - Semanal (PJR Diário)', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      prazo_producao:    { label:'Prazo de Produção Cumprido - Semanal (PJR Diário)',  tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:          { label:'Inovação e Criatividade',                       tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      checklist:         { label:'Checklist de Rotina',                           tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      plano_desenv:      { label:'Pl. Desenvolvimento e Talentos',                tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      erro_retrabalho:   { label:'Erro Produção / Retrabalho',                    tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      controle_estoque:  { label:'Controle de Estoque (Acuracidade)',            tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
     mA:{
-      producao_individual:{ label:'Produção Individual x Solicitado', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:11.67,ouro:16.67}, agg:'avg', unit:'%'  },
-      inovacao:           { label:'Inovação e Criatividade',          tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:8.33,prata:11.67,ouro:16.67}, agg:'sum', unit:'pt' },
-      prazo_entrega:      { label:'Prazo de Entrega Produção/Tempo',  tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:11.67,ouro:16.67}, agg:'avg', unit:'%'  },
-      erro_producao:      { label:'Erro de Produção',                 tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:8.33,prata:11.67,ouro:16.67}, agg:'sum', unit:'oc' },
-      qualif_terceirizada:{ label:'Qualificação da Terceirizada',     tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:11.67,ouro:16.67}, agg:'avg', unit:'%'  },
-      retrabalho:         { label:'Retrabalho',                       tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:8.33,prata:11.67,ouro:16.67}, agg:'sum', unit:'oc' },
+      producao_individual:{ label:'Produção Individual x Solicitado',           tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:           { label:'Inovação e Criatividade',                     tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      prazo_entrega:      { label:'Prazo de Entrega Produção/Tempo',             tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      erro_retrabalho:    { label:'Erro de Produção / Retrabalho',               tipo:'menor', bronze:4,  prata:3,  ouro:2,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      engajamento_rotinas:{ label:'Taxa de Engajamento nas Rotinas do Setor',    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
   },
   padronizacao: {
@@ -491,20 +487,19 @@ const SD = {
     temMultiplosAux: true,
     colabsDefault: ['Lucilânia','Edmara','Rosilene','Elisangela','Maria','Alonso (Entregador)'],
     mG:{
-      producao_setor:    { label:'Produção do Setor',           tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
-      prazo_entrega:     { label:'Prazo de Entrega Produção',   tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
-      inovacao:          { label:'Inovação e Criatividade',     tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'sum', unit:'pt' },
-      checklist:         { label:'Checklist de Rotina',         tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
-      plano_desenv:      { label:'Pl. Desenvolvimento e Talentos',tipo:'maior',bronze:85, prata:90, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
-      erros_setor:       { label:'Erros Identificados no Setor', tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'sum', unit:'oc' },
-      qualif_terceirizado:{ label:'Qualificação Terceirizado',  tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10.71,prata:12.86,ouro:21.43}, agg:'avg', unit:'%'  },
+      producao_setor:    { label:'Produção do Setor',              tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      prazo_entrega:     { label:'Prazo de Entrega Produção',      tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:          { label:'Inovação e Criatividade',        tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      checklist:         { label:'Checklist de Rotina',            tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      plano_desenv:      { label:'Pl. Desenvolvimento e Talentos', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      erros_setor:       { label:'Erros Identificados no Setor',   tipo:'menor', bronze:4,  prata:3,  ouro:2,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      qualif_terceirizado:{ label:'Qualificação Terceirizado',     tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
     mA:{
-      producao_diaria:    { label:'Índice de Produção Diária',     tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10,prata:14,ouro:20}, agg:'avg', unit:'%'  },
-      erros_qualif:       { label:'Erros Identificados/Qualificação',tipo:'menor', bronze:3,  prata:2,  ouro:0,  bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'oc' },
-      erros_producao_ind: { label:'Erros de Produção Individual',  tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'oc' },
-      inovacao:           { label:'Inovação e Criatividade',       tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'pt' },
-      retrabalho:         { label:'Retrabalho',                    tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'oc' },
+      producao_diaria:    { label:'Índice de Produção Diária',                  tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      erros_producao:     { label:'Erros de Produção / Retrabalho',             tipo:'menor', bronze:4,  prata:3,  ouro:2,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      inovacao:           { label:'Inovação e Criatividade',                    tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      engajamento_rotinas:{ label:'Taxa de Engajamento nas Rotinas do Setor',   tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
   },
   fundicao: {
@@ -514,22 +509,22 @@ const SD = {
     temMultiplosAux: true,
     colabsDefault: ['Dioges','Antonio Oliveira','Marcos','Ronycleber','José Leonilson','Natanael','Gleydson'],
     mG:{
-      producao_mensal:   { label:'Produção Mensal (Geral)',         tipo:'maior', bronze:25000, prata:27500, ouro:30000, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'sum', unit:'un' },
-      prazo_producao:    { label:'Prazo de Produção',               tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      aproveitamento:    { label:'Índice de Aproveitamento',        tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      pecas_paradas:     { label:'Peças Produzidas x Paradas',      tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      inovacao:          { label:'Inovação e Criatividade',         tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'sum', unit:'pt' },
-      checklist:         { label:'Checklist de Rotina',             tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      plano_desenv:      { label:'Pl. Desenvolvimento e Talentos',  tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      qualif_terceirizada:{ label:'Qualificação da Terceirizada',   tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      recuperacao_pecas: { label:'Recuperação de Peças',            tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      producao_mensal:      { label:'Produção Mensal (Geral)',            tipo:'maior', bronze:25000, prata:27500, ouro:30000, bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'un' },
+      prazo_producao:       { label:'Prazo de Produção',                  tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      aproveitamento:       { label:'Índice de Aproveitamento da Fundição', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      recuperacao_deplacada:{ label:'Recuperação de Mercadoria Deplacada', tipo:'maior', bronze:25000, prata:27500, ouro:30000, bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'un' },
+      inovacao:             { label:'Inovação e Criatividade',            tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      checklist:            { label:'Checklist de Rotina',                tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      plano_desenv:         { label:'Pl. Desenvolvimento e Talentos',     tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      qualif_terceirizada:  { label:'Qualificação da Terceirizada',       tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      recuperacao_pecas:    { label:'Recuperação de Peças',               tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
     mA:{
-      producao_diaria: { label:'Produção Diária',          tipo:'maior', bronze:1000, prata:1100, ouro:1200, bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'un' },
-      erro_producao:   { label:'Erro de Produção',         tipo:'menor', bronze:3,  prata:2,  ouro:0,  bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'oc' },
-      tempo_producao:  { label:'Tempo Produção/Execução',  tipo:'menor', bronze:36, prata:24, ouro:12, bonif:{bronze:10,prata:14,ouro:20}, agg:'avg', unit:'h'  },
-      inovacao:        { label:'Inovação e Criatividade',  tipo:'maior', bronze:2,  prata:3,  ouro:4,  bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'pt' },
-      retrabalho:      { label:'Índice de Retrabalho',     tipo:'menor', bronze:3,  prata:2,  ouro:0,  bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'oc' },
+      producao_diaria: { label:'Produção Diária',                          tipo:'maior', bronze:25000, prata:27500, ouro:30000, bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'un' },
+      erro_retrabalho: { label:'Erro Produção / Retrabalho',               tipo:'menor', bronze:3,  prata:2,  ouro:0,  bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
+      tempo_producao:  { label:'Tempo Produção Execução',                  tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:        { label:'Inovação e Criatividade',                  tipo:'maior', bronze:2,  prata:3,  ouro:4,  bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      engajamento_rotinas:{ label:'Taxa de Engajamento nas Rotinas do Setor', tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
   },
   recepcao: {
@@ -540,62 +535,53 @@ const SD = {
     colabsDefault: ['Francy','Eliene','Anderson (Boy)','Felipe Junior (Boy)'],
     colabGrupos: { 'Francy':'servicos_gerais', 'Eliene':'servicos_gerais', 'Anderson (Boy)':'motoboy', 'Felipe Junior (Boy)':'motoboy' },
     mG:{
-      reclam_limpeza:  { label:'Reclam./Ocorr. Limpeza',         tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'sum', unit:'oc' },
-      cumpr_tarefas:   { label:'Cumprimento da Rotina de Tarefas',tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      ocorr_gerais:    { label:'Ocorrências Gerais',             tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'sum', unit:'oc' },
-      inovacao:        { label:'Inovação e Criatividade',        tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'sum', unit:'pt' },
-      checklist:       { label:'Checklist de Rotina',            tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      plano_desenv:    { label:'Pl. Desenvolvimento e Talentos', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      demandas_prazo:  { label:'Cumprimento de Demandas x Prazo',tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
-      checklist_2:     { label:'Checklist de Rotina (2)',        tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:9.38,prata:11.25,ouro:18.75}, agg:'avg', unit:'%'  },
+      ocorr_gerais:    { label:'Ocorrências Gerais',             tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      cumpr_tarefas:   { label:'Cumprimento da Rotina de Tarefas',tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:        { label:'Inovação e Criatividade',        tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      checklist:       { label:'Checklist de Rotina',            tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      plano_desenv:    { label:'Pl. Desenvolvimento e Talentos', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      demandas_prazo:  { label:'Cumprimento de Demandas x Prazo',tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
     gruposAux:{
       servicos_gerais:{ nome:'Serviços Gerais', mA:{
-        cumpr_rotina: { label:'Cumprimento da Rotina Diária',     tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-        inovacao:     { label:'Inovação e Criatividade',          tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'sum', unit:'pt' },
-        checklist:    { label:'Checklist Colaboradora',           tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-        retrabalho:   { label:'Retrabalho (Tarefas Refeitas)',    tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
+        cumpr_rotina:        { label:'Cumprimento da Rotina Diária de Tarefas', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+        inovacao:            { label:'Inovação e Criatividade',                 tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+        checklist:           { label:'Checklist Colaboradora',                  tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+        engajamento_rotinas: { label:'Taxa de Engajamento nas Rotinas do Setor',tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
       }},
       motoboy:{ nome:'Moto Boy', mA:{
-        pontualidade: { label:'Índice de Pontualidade nas Entregas',tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10,prata:14,ouro:20}, agg:'avg', unit:'%'  },
-        ocorrencias:  { label:'Índice de Ocorrências',            tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'pt' },
-        tarefas_conf: { label:'Tarefas Cumpridas Conforme',       tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10,prata:14,ouro:20}, agg:'avg', unit:'%'  },
-        checklist:    { label:'Checklist Colaborador',            tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:10,prata:14,ouro:20}, agg:'avg', unit:'%'  },
-        inovacao:     { label:'Inovação e Criatividade',          tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:10,prata:14,ouro:20}, agg:'sum', unit:'pt' },
+        pontualidade:        { label:'Índice de Pontualidade nas Entregas',     tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+        ocorrencias:         { label:'Índice de Ocorrências',                   tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+        tarefas_conf:        { label:'Tarefas Cumpridas Conforme',              tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+        inovacao:            { label:'Inovação e Criatividade',                 tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+        engajamento_rotinas: { label:'Taxa de Engajamento nas Rotinas do Setor',tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
       }},
     },
   },
   financeiro: {
-    icon:'💰', nome:'Financeiro', gestor:'Daiane', status:'ativo',
+    icon:'💰', nome:'Financeiro', gestor:'Daniele', status:'ativo',
     colG:'lancamentos_daiane', colA:'lancamentos_financeiro_aux',
     cfgSenhas:'senhas_financeiro', cfgColabs:'colaboradores_financeiro', cfgMetasG:'metas_gestor_financeiro', cfgMetasA:'metas_auxiliar_financeiro',
     temMultiplosAux: true,
-    colabsDefault: ['Adriano','Camila'],
-    colabGrupos: { 'Adriano':'adriano', 'Camila':'camila' },
+    colabsDefault: ['Cicero','Maycon'],
     mG:{
-      cumpr_faturamento:  { label:'Cumprimento do Faturamento Oficial',tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      pontualidade_resumos:{ label:'Pontualidade dos Resumos Financeiros',tipo:'maior',bronze:85,prata:90,ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      controle_caixa:     { label:'Controle Diário de Caixa',         tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      checklist_setor:    { label:'Checklist Rotina do Setor',        tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      inovacao:           { label:'Inovação e Criatividade',          tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'sum', unit:'pt' },
-      checklist:          { label:'Checklist de Rotina',              tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      notas_servico:      { label:'Controle de Notas de Serviço em Dias',tipo:'maior',bronze:85,prata:90,ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      cinco_s:            { label:'5S Organização de Documentos',     tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
-      plano_desenv:       { label:'Pl. Desenvolvimento e Talentos',   tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:8.33,prata:10,ouro:16.67}, agg:'avg', unit:'%'  },
+      cumpr_faturamento:   { label:'Índice de Cumprimento do Faturamento Oficial', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      pontualidade_resumos:{ label:'Pontualidade dos Resumos Financeiros',         tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      conciliacao_bancaria:{ label:'Conciliação Bancária',                         tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      checklist_setor:     { label:'Checklist Rotina do Setor (caixa/estorno/contas)', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:            { label:'Inovação e Criatividade',                      tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      checklist:           { label:'Checklist de Rotina',                          tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      notas_servico:       { label:'Controle de Notas de Serviço em Dias (até dia 5)', tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      cinco_s:             { label:'5S Organização de Documentos',                 tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      plano_desenv:        { label:'Pl. Desenvolvimento e Talentos',               tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
-    gruposAux:{
-      adriano:{ nome:'Adriano', mA:{
-        deposito_prazo:   { label:'Lançamento Depósito no Prazo',     tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-        tempo_atendimento:{ label:'Tempo Médio de Atendimento nos Grupos',tipo:'menor',bronze:36,prata:24,ouro:12, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'h'  },
-        inovacao:         { label:'Inovação e Criatividade',          tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'sum', unit:'pt' },
-        checklist_op:     { label:'Checklist Operacional',            tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-      }},
-      camila:{ nome:'Camila', mA:{
-        acuracidade_mascate:{ label:'Acuracidade das Confirmações do Mascate',tipo:'maior',bronze:85,prata:90,ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-        checklist_op:       { label:'Checklist Operacional',          tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-        comprovantes:       { label:'Índice de Comprovantes Identificados',tipo:'maior',bronze:85,prata:90,ouro:100, bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'avg', unit:'%'  },
-        inovacao:           { label:'Inovação e Criatividade',        tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:12.5,prata:17.5,ouro:25}, agg:'sum', unit:'pt' },
-      }},
+    mA:{
+      precisao_qualidade: { label:'Precisão / Qualidade',                       tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      controle_operacional:{ label:'Controle Operacional',                      tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      cumprimento_prazos: { label:'Cumprimento dos Prazos',                     tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      organizacao_conf:   { label:'Organização e Confiabilidade',              tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
+      inovacao:           { label:'Inovação e Criatividade',                    tipo:'maior', bronze:2,  prata:3,  ouro:4,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'pt' },
+      engajamento_rotinas:{ label:'Taxa de Engajamento nas Rotinas do Setor',   tipo:'maior', bronze:85, prata:90, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
     },
   },
   comercial: {
@@ -663,6 +649,7 @@ window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle
 // ══ INICIALIZAÇÃO ══
 (async function init() {
   await carregarNomesGestores();
+  await carregarDefinicoes();
   renderSidebar();
   renderBoasVindas();
 })();
@@ -672,6 +659,21 @@ async function carregarNomesGestores() {
     const snap = await getDoc(doc(db,'config','nomes_gestores'));
     if(snap.exists()) Object.entries(snap.data()).forEach(([k,v])=>{ if(SD[k]) SD[k].gestor=v; });
   } catch(e){}
+}
+
+// Aplica sobre o SD as definições de indicadores editadas pelo gestor geral (salvas no banco)
+async function carregarDefinicoes() {
+  await Promise.all(Object.keys(SD).map(async key=>{
+    try {
+      const snap = await getDoc(doc(db,'config',`def_${key}`));
+      if(snap.exists()){
+        const d=snap.data();
+        if(d.mG) SD[key].mG=d.mG;
+        if(d.mA) SD[key].mA=d.mA;
+        if(d.gruposAux) SD[key].gruposAux=d.gruposAux;
+      }
+    } catch(e){}
+  }));
 }
 
 function renderSidebar() {
@@ -790,11 +792,9 @@ window.loginGeral = async () => {
   if(!senha){err.textContent='Digite a senha';return;}
   try {
     const snap = await getDoc(doc(db,'config','senhas_geral'));
-    const s = snap.exists()?snap.data():{gestor:'admin123',admin:'admin123',supervisor_daiane:'daiane123'};
-    if(!s.supervisor_daiane){ s.supervisor_daiane='daiane123'; await setDoc(doc(db,'config','senhas_geral'),s); }
-    else if(!snap.exists()) await setDoc(doc(db,'config','senhas_geral'),s);
+    const s = snap.exists()?snap.data():{gestor:'admin123',admin:'admin123'};
+    if(!snap.exists()) await setDoc(doc(db,'config','senhas_geral'),s);
     if(senha===s.gestor){ geralLogado=true; supervisorSetores=null; supervisorNome='Ítalo'; atualizarTopbarUser('Ítalo','geral'); renderGeralLogado(); }
-    else if(senha===s.supervisor_daiane){ geralLogado=true; supervisorSetores=['financeiro','comercial']; supervisorNome='Daiane'; atualizarTopbarUser('Daiane','geral'); renderGeralLogado(); }
     else err.textContent='Senha incorreta';
   } catch(e){ err.textContent='Erro de conexão'; }
 };
@@ -832,6 +832,7 @@ async function selecionarColaborador(key) {
   document.getElementById('main-content').innerHTML=`
     <div class="setor-portal">
       <div class="portal-header"><h2>${s.icon} ${s.nome} — Auxiliar</h2><p>Selecione seu nome para continuar</p></div>
+      <button class="btn-sair-setor" style="margin-bottom:14px" onclick="sairSetor()">← Voltar ao login do setor</button>
       <div style="display:flex;flex-direction:column;gap:10px;max-width:320px">
         ${colabs.map(n=>`
         <div onclick="selecionarNome('${n.replace(/'/g,"\\'")}','${key}')"
@@ -899,6 +900,7 @@ function renderSetorLogado() {
             <select id="s-mes">${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m,i)=>`<option value="${i+1}"${i+1===mesAtual?' selected':''}>${m}</option>`).join('')}</select>
             <input type="number" id="s-ano" value="${anoAtual}" min="2024" max="2030" style="width:62px">
           </div>
+          ${(!isGestor&&s.temMultiplosAux)?`<button class="btn-sair-setor" onclick="trocarAuxiliar()">🔄 Trocar auxiliar</button>`:''}
           <button class="btn-sair-setor" onclick="sairSetor()">← Sair do setor</button>
         </div>
       </div>
@@ -1017,6 +1019,13 @@ window.sairSetor = () => {
   document.getElementById('tb-user-nome').style.display='none';
   document.getElementById('tb-sair').style.display='none';
   renderPortalSetor(navAtivo);
+};
+
+// Volta à seleção de auxiliares sem precisar deslogar
+window.trocarAuxiliar = () => {
+  colaborador=null; grupoAux=null;
+  document.getElementById('tb-user-nome').textContent=SD[setorLogado].nome;
+  selecionarColaborador(setorLogado);
 };
 
 // ══ CARREGAR DADOS DO SETOR ══
@@ -1142,17 +1151,26 @@ window.renderDiario = async () => {
   const col=roleLogado==='gestor'?s.colG:s.colA;
   const mes=parseInt(document.getElementById('hist-dmes').value);
   const ano=parseInt(document.getElementById('hist-dano').value);
-  let q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano),orderBy('data','asc'));
-  if(roleLogado==='auxiliar'&&colaborador) q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colaborador),orderBy('data','asc'));
-  const snap=await getDocs(q); const dados=snap.docs.map(d=>d.data()); const keys=Object.keys(metas);
   const el=document.getElementById('hist-diario-body'); if(!el) return;
-  el.innerHTML=dados.length?dados.map(l=>`<tr><td>${l.data||'—'}</td>${keys.map(k=>`<td>${fmtVal(l[k],metas[k].unit)}</td>`).join('')}</tr>`).join('')
-    :`<tr><td colspan="${keys.length+1}" style="color:var(--muted);text-align:center;padding:20px">Sem lançamentos</td></tr>`;
+  const keys=Object.keys(metas);
+  el.innerHTML=`<tr><td colspan="${keys.length+1}" style="color:var(--muted);text-align:center;padding:20px">Carregando...</td></tr>`;
+  try{
+    // sem orderBy no Firestore (evita índice composto) — ordena no cliente
+    let q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano));
+    if(roleLogado==='auxiliar'&&colaborador) q=query(collection(db,col),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colaborador));
+    const snap=await getDocs(q);
+    const dados=snap.docs.map(d=>d.data()).sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+    el.innerHTML=dados.length?dados.map(l=>`<tr><td>${l.data||'—'}</td>${keys.map(k=>`<td>${fmtVal(l[k],metas[k].unit)}</td>`).join('')}</tr>`).join('')
+      :`<tr><td colspan="${keys.length+1}" style="color:var(--muted);text-align:center;padding:20px">Sem lançamentos neste mês</td></tr>`;
+  }catch(e){
+    el.innerHTML=`<tr><td colspan="${keys.length+1}" style="color:var(--danger);text-align:center;padding:20px">Erro ao carregar (${e.code||e.message})</td></tr>`;
+  }
 };
 window.switchHist = (modo, btn) => {
   document.querySelectorAll('.htog-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
   document.getElementById('hist-mensal').style.display=modo==='mensal'?'block':'none';
   document.getElementById('hist-diario').style.display=modo==='diario'?'block':'none';
+  if(modo==='diario') renderDiario();
 };
 
 // ── Modal lançar ──
@@ -1220,8 +1238,10 @@ async function carregarColabsSetor() {
 }
 function renderColabsList() {
   const el=document.getElementById('colabs-list'); if(!el) return;
-  el.innerHTML=colabsEdit.map((n,i)=>`<div class="colab-row"><input type="text" value="${n}" onchange="colabsEdit[${i}]=this.value"><button class="btn-rm" onclick="colabsEdit.splice(${i},1);renderColabsList()">✕</button></div>`).join('');
+  el.innerHTML=colabsEdit.map((n,i)=>`<div class="colab-row"><input type="text" value="${(n||'').replace(/"/g,'&quot;')}" oninput="setColabNome(${i},this.value)"><button class="btn-rm" onclick="removeColab(${i})">✕</button></div>`).join('');
 }
+window.setColabNome = (i,v) => { colabsEdit[i]=v; };
+window.removeColab = (i) => { colabsEdit.splice(i,1); renderColabsList(); };
 window.addColab = () => { colabsEdit.push('Novo Auxiliar'); renderColabsList(); };
 window.salvarColabs = async () => { const s=SD[setorLogado]; await setDoc(doc(db,'config',s.cfgColabs),{lista:colabsEdit}); toast('✅ Auxiliares salvos!'); };
 window.abrirModalLimpar = () => { document.getElementById('limpar-input').value=''; document.getElementById('limpar-err').textContent=''; document.getElementById('modal-limpar').classList.add('open'); };
@@ -1253,11 +1273,36 @@ function renderGeralLogado() {
         <h4 style="color:var(--gold);font-size:.85rem;margin-bottom:14px">⚙️ Configurações${supervisorSetores?' — Auxiliares':' do Sistema'}</h4>
         ${!supervisorSetores?`
         <div class="geral-config-section">
-          <h4>🔑 Senha da Gestão Geral</h4>
-          <div style="display:flex;gap:8px;max-width:400px">
-            <input type="password" id="cfg-geral-senha" placeholder="Nova senha" style="flex:1;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.85rem;outline:none">
-            <button class="btn-gold-sm" onclick="salvarSenhaGeral()">Salvar</button>
+          <h4>🔑 Senhas Gerais</h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;max-width:600px;margin-bottom:10px">
+            <div><label style="font-size:.7rem;color:var(--muted);display:block;margin-bottom:3px">Senha da Gestão Geral (Ítalo)</label><input type="password" id="cfg-geral-senha" placeholder="Nova senha" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.85rem;outline:none"></div>
+            <div><label style="font-size:.7rem;color:var(--muted);display:block;margin-bottom:3px">Senha do Cadeado 🔒 (valores R$)</label><input type="password" id="cfg-admin-senha" placeholder="Nova senha" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.85rem;outline:none"></div>
           </div>
+          <button class="btn-gold-sm" onclick="salvarSenhasGerais()">Salvar Senhas Gerais</button>
+        </div>
+        <div class="geral-config-section">
+          <h4>🔐 Senhas dos Setores</h4>
+          <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Defina as senhas de Gestor e Auxiliar de cada setor. Deixe em branco para manter a atual.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">
+            ${Object.entries(SD).filter(([,s])=>s.status==='ativo').map(([key,s])=>`
+            <div style="border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--card2)">
+              <div style="font-size:.82rem;font-weight:700;margin-bottom:8px">${s.icon} ${s.nome}</div>
+              <label style="font-size:.68rem;color:var(--muted);display:block;margin-bottom:2px">Senha Gestor</label>
+              <input type="password" id="ss-g-${key}" placeholder="••••••" style="width:100%;padding:7px 9px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.82rem;outline:none;margin-bottom:6px">
+              <label style="font-size:.68rem;color:var(--muted);display:block;margin-bottom:2px">Senha Auxiliar</label>
+              <input type="password" id="ss-a-${key}" placeholder="••••••" style="width:100%;padding:7px 9px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.82rem;outline:none;margin-bottom:8px">
+              <button class="btn-gold-sm" style="width:100%" onclick="salvarSenhaSetorGeral('${key}')">Salvar</button>
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="geral-config-section">
+          <h4>🧩 Editor de Indicadores</h4>
+          <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Adicione, edite ou remova indicadores, metas e valores (R$) de qualquer setor. As mudanças valem para todos.</p>
+          <select id="edit-setor-sel" onchange="renderEditorInd()" style="padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.85rem;outline:none;margin-bottom:12px">
+            <option value="">— Selecione o setor —</option>
+            ${Object.entries(SD).filter(([,s])=>s.status==='ativo').map(([key,s])=>`<option value="${key}">${s.icon} ${s.nome}</option>`).join('')}
+          </select>
+          <div id="editor-ind-area"></div>
         </div>
         <div class="geral-config-section">
           <h4>👥 Nomes dos Responsáveis por Setor</h4>
@@ -1313,11 +1358,99 @@ window.salvarNomesSetores = async () => {
   const obj={}; Object.keys(SD).forEach(k=>{ const el=document.getElementById(`gn-${k}`); if(el){ SD[k].gestor=el.value; obj[k]=el.value; } });
   await setDoc(doc(db,'config','nomes_gestores'),obj); toast('✅ Nomes salvos!');
 };
-window.salvarSenhaGeral = async () => {
-  const nova=document.getElementById('cfg-geral-senha').value; if(!nova){toast('⚠️ Digite a nova senha');return;}
+window.salvarSenhasGerais = async () => {
+  const g=document.getElementById('cfg-geral-senha').value, a=document.getElementById('cfg-admin-senha').value;
+  if(!g&&!a){toast('⚠️ Digite ao menos uma senha');return;}
   const snap=await getDoc(doc(db,'config','senhas_geral')); const atual=snap.exists()?snap.data():{gestor:'admin123',admin:'admin123'};
-  atual.gestor=nova; await setDoc(doc(db,'config','senhas_geral'),atual); toast('✅ Senha da gestão salva!');
+  if(g)atual.gestor=g; if(a)atual.admin=a;
+  await setDoc(doc(db,'config','senhas_geral'),atual);
+  document.getElementById('cfg-geral-senha').value=''; document.getElementById('cfg-admin-senha').value='';
+  toast('✅ Senhas gerais salvas!');
 };
+window.salvarSenhaSetorGeral = async (key) => {
+  const s=SD[key]; const g=document.getElementById(`ss-g-${key}`).value, a=document.getElementById(`ss-a-${key}`).value;
+  if(!g&&!a){toast('⚠️ Digite ao menos uma senha');return;}
+  const snap=await getDoc(doc(db,'config',s.cfgSenhas)); const atual=snap.exists()?snap.data():{gestor:'gestor123',auxiliar:'auxiliar123',admin:'admin123'};
+  if(g)atual.gestor=g; if(a)atual.auxiliar=a;
+  await setDoc(doc(db,'config',s.cfgSenhas),atual);
+  document.getElementById(`ss-g-${key}`).value=''; document.getElementById(`ss-a-${key}`).value='';
+  toast(`✅ Senhas de ${s.nome} salvas!`);
+};
+// ══ EDITOR DE INDICADORES (gestor geral) ══
+let editKey=null, editData=null; const editColls={};
+window.renderEditorInd = () => {
+  const key=document.getElementById('edit-setor-sel').value;
+  const area=document.getElementById('editor-ind-area');
+  if(!key){ area.innerHTML=''; editKey=null; return; }
+  editKey=key; const s=SD[key];
+  editData=JSON.parse(JSON.stringify(s.gruposAux?{mG:s.mG||{},gruposAux:s.gruposAux}:{mG:s.mG||{},mA:s.mA||{}}));
+  Object.keys(editColls).forEach(k=>delete editColls[k]);
+  editColls['cG']=editData.mG;
+  if(editData.gruposAux) Object.entries(editData.gruposAux).forEach(([gk,g])=>editColls['g_'+gk]=g.mA);
+  else editColls['cA']=editData.mA;
+  refreshEditorArea();
+};
+function editorLabel(cid){
+  if(cid==='cG') return '👔 Gestor';
+  if(cid==='cA') return '🔧 Auxiliar';
+  const gk=cid.slice(2); return '🔧 Aux: '+(editData.gruposAux?.[gk]?.nome||gk);
+}
+function refreshEditorArea(){
+  const area=document.getElementById('editor-ind-area'); if(!area) return;
+  area.innerHTML = Object.keys(editColls).map(cid=>editorCollHtml(cid)).join('') +
+    `<button class="btn-gold-sm" style="margin-top:10px" onclick="salvarDefSetor()">💾 Salvar Indicadores de ${SD[editKey].nome}</button>`;
+}
+function editorCollHtml(cid){
+  const rows=Object.keys(editColls[cid]).map(k=>editorRowHtml(cid,k)).join('') || '<p style="font-size:.72rem;color:var(--muted)">Nenhum indicador.</p>';
+  return `<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <strong style="font-size:.82rem">${editorLabel(cid)}</strong>
+      <button class="btn-add-colab" onclick="editorAddInd('${cid}')">+ Indicador</button>
+    </div>${rows}</div>`;
+}
+window.edSet = (cid,k,field,value,isNum) => {
+  const m=editColls[cid]&&editColls[cid][k]; if(!m) return;
+  const val=isNum?(parseFloat(value)||0):value;
+  if(field.indexOf('.')>-1){ const[a,b]=field.split('.'); if(!m[a])m[a]={}; m[a][b]=val; } else m[field]=val;
+};
+function editorRowHtml(cid,k){
+  const m=editColls[cid][k]; if(!m.bonif)m.bonif={bronze:0,prata:0,ouro:0};
+  const u=['%','h','oc','pt','un','R$'];
+  const num=(v,field,w='58px')=>`<input type="number" step="0.01" value="${v}" onchange="edSet('${cid}','${k}','${field}',this.value,true)" style="width:${w};padding:5px 6px;border-radius:5px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.75rem;outline:none">`;
+  return `<div style="border-top:1px dashed var(--border);padding:8px 0;display:flex;flex-wrap:wrap;gap:5px;align-items:center">
+    <input value="${(m.label||'').replace(/"/g,'&quot;')}" oninput="edSet('${cid}','${k}','label',this.value,false)" placeholder="Nome" style="flex:1;min-width:150px;padding:5px 7px;border-radius:5px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.76rem;outline:none">
+    <select onchange="edSet('${cid}','${k}','tipo',this.value,false)" style="padding:5px;border-radius:5px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.74rem">
+      <option value="maior"${m.tipo==='maior'?' selected':''}>maior↑</option>
+      <option value="menor"${m.tipo==='menor'?' selected':''}>menor↓</option>
+    </select>
+    <select onchange="edSet('${cid}','${k}','unit',this.value,false)" style="padding:5px;border-radius:5px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.74rem">
+      ${u.map(x=>`<option value="${x}"${m.unit===x?' selected':''}>${x}</option>`).join('')}
+    </select>
+    <span style="font-size:.66rem;color:var(--muted)">meta:</span>
+    ${num(m.bronze,'bronze')}
+    ${num(m.prata,'prata')}
+    ${num(m.ouro,'ouro')}
+    <span style="font-size:.66rem;color:var(--gold)">R$:</span>
+    ${num(m.bonif.bronze,'bonif.bronze')}
+    ${num(m.bonif.prata,'bonif.prata')}
+    ${num(m.bonif.ouro,'bonif.ouro')}
+    <button class="btn-rm" onclick="editorRemInd('${cid}','${k}')">✕</button>
+  </div>`;
+}
+window.editorAddInd=(cid)=>{ editColls[cid]['ind_'+Date.now()]={label:'Novo Indicador',tipo:'maior',unit:'%',bronze:0,prata:0,ouro:0,bonif:{bronze:0,prata:0,ouro:0},agg:'avg'}; refreshEditorArea(); };
+window.editorRemInd=(cid,k)=>{ if(confirm('Remover este indicador?')){ delete editColls[cid][k]; refreshEditorArea(); } };
+window.salvarDefSetor=async()=>{
+  const fixAgg=obj=>Object.values(obj).forEach(m=>{ m.agg=['oc','pt','un'].includes(m.unit)?'sum':'avg'; if(!m.bonif)m.bonif={bronze:0,prata:0,ouro:0}; });
+  fixAgg(editData.mG);
+  if(editData.gruposAux) Object.values(editData.gruposAux).forEach(g=>fixAgg(g.mA)); else fixAgg(editData.mA);
+  const payload={mG:editData.mG}; if(editData.gruposAux)payload.gruposAux=editData.gruposAux; else payload.mA=editData.mA;
+  try{
+    await setDoc(doc(db,'config',`def_${editKey}`),payload);
+    SD[editKey].mG=editData.mG; if(editData.gruposAux)SD[editKey].gruposAux=editData.gruposAux; else SD[editKey].mA=editData.mA;
+    toast('✅ Indicadores salvos!'); atualizarGeral();
+  }catch(e){ toast('❌ Erro ao salvar'); }
+};
+
 const gcColabsMap={};
 async function gcCarregarColabs(key) {
   const s=SD[key]; const el=document.getElementById(`gc-colabs-${key}`); if(!el) return;
@@ -1327,8 +1460,10 @@ async function gcCarregarColabs(key) {
 }
 function gcRenderColabs(key) {
   const el=document.getElementById(`gc-colabs-${key}`); if(!el) return;
-  el.innerHTML=(gcColabsMap[key]||[]).map((n,i)=>`<div class="colab-row"><input type="text" value="${n}" onchange="gcColabsMap['${key}'][${i}]=this.value"><button class="btn-rm" onclick="gcColabsMap['${key}'].splice(${i},1);gcRenderColabs('${key}')">✕</button></div>`).join('');
+  el.innerHTML=(gcColabsMap[key]||[]).map((n,i)=>`<div class="colab-row"><input type="text" value="${(n||'').replace(/"/g,'&quot;')}" oninput="gcSetColab('${key}',${i},this.value)"><button class="btn-rm" onclick="gcRemColab('${key}',${i})">✕</button></div>`).join('');
 }
+window.gcSetColab = (key,i,v) => { if(gcColabsMap[key]) gcColabsMap[key][i]=v; };
+window.gcRemColab = (key,i) => { if(gcColabsMap[key]){ gcColabsMap[key].splice(i,1); gcRenderColabs(key); } };
 window.gcAddColab = key => { if(!gcColabsMap[key]) gcColabsMap[key]=[]; gcColabsMap[key].push('Novo Auxiliar'); gcRenderColabs(key); };
 window.gcSalvarColabs = async key => { const s=SD[key]; await setDoc(doc(db,'config',s.cfgColabs),{lista:gcColabsMap[key]||[]}); toast('✅ Auxiliares salvos!'); };
 
