@@ -650,11 +650,34 @@ window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle
 
 // ══ INICIALIZAÇÃO ══
 (async function init() {
+  await carregarSetoresCustom();
   await carregarNomesGestores();
   await carregarDefinicoes();
   renderSidebar();
   renderBoasVindas();
 })();
+
+// Guarda o doc bruto de setores customizados (overrides + removidos) para poder editar/salvar depois
+let SETORES_CUSTOM = { overrides:{}, removidos:[] };
+// Aplica sobre o SD setores adicionados/editados/removidos pelo gestor geral (salvos no banco)
+async function carregarSetoresCustom() {
+  try {
+    const snap = await getDoc(doc(db,'config','setores_custom'));
+    if(snap.exists()) SETORES_CUSTOM = { overrides:{}, removidos:[], ...snap.data() };
+  } catch(e){}
+  Object.entries(SETORES_CUSTOM.overrides||{}).forEach(([key,ov])=>{
+    if(SD[key]) Object.assign(SD[key], ov);
+    else SD[key] = { mG:{}, mA:{}, ...ov };
+  });
+  (SETORES_CUSTOM.removidos||[]).forEach(key=>{ delete SD[key]; });
+}
+// Gera uma chave/slug única a partir do nome digitado (sem acento, minúsculo, sem espaços)
+function slugSetor(nome) {
+  let base = nome.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'setor';
+  let key = base, i = 1;
+  while(SD[key]) { key = `${base}_${++i}`; }
+  return key;
+}
 
 async function carregarNomesGestores() {
   try {
@@ -1320,6 +1343,13 @@ function renderGeralLogado() {
           </div>
         </div>
         <div class="geral-config-section">
+          <h4>🏢 Gerenciar Setores</h4>
+          <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Adicione, edite (nome/ícone/gestor) ou remova setores inteiros do sistema. Remover só oculta o setor do menu — os lançamentos já salvos no banco não são apagados.</p>
+          <div id="setores-manager-list"></div>
+          <button class="btn-add-colab" onclick="abrirNovoSetorForm()">+ Adicionar Setor</button>
+          <div id="setor-form-area" style="margin-top:14px"></div>
+        </div>
+        <div class="geral-config-section">
           <h4>🧩 Editor de Indicadores</h4>
           <p style="font-size:.76rem;color:var(--muted);margin-bottom:10px">Adicione, edite ou remova indicadores, metas e valores (R$) de qualquer setor. As mudanças valem para todos.</p>
           <select id="edit-setor-sel" onchange="renderEditorInd()" style="padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.85rem;outline:none;margin-bottom:12px">
@@ -1343,7 +1373,7 @@ function renderGeralLogado() {
       </div>
       <div class="falcioni-ft"><img src="Falcioni.jpg" onerror="this.style.display='none'"></div>
     </div>`;
-  if(!supervisorSetores) renderCfgNomesSetores();
+  if(!supervisorSetores){ renderCfgNomesSetores(); renderSetoresManager(); }
   Object.entries(SD).filter(([key,s])=>s.status==='ativo'&&s.temMultiplosAux&&(!supervisorSetores||supervisorSetores.includes(key))).forEach(([key])=>gcCarregarColabs(key));
   atualizarGeral();
 }
@@ -1473,6 +1503,76 @@ window.salvarDefSetor=async()=>{
     SD[editKey].mG=editData.mG; if(editData.gruposAux)SD[editKey].gruposAux=editData.gruposAux; else SD[editKey].mA=editData.mA;
     toast('✅ Indicadores salvos!'); atualizarGeral();
   }catch(e){ toast('❌ Erro ao salvar'); }
+};
+
+// ══ GERENCIAR SETORES (adicionar / editar / remover setor inteiro) ══
+function renderSetoresManager() {
+  const el=document.getElementById('setores-manager-list'); if(!el) return;
+  el.innerHTML = Object.entries(SD).map(([key,s])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px dashed var(--border)">
+      <span style="font-size:1.1rem">${s.icon}</span>
+      <span style="flex:1;font-size:.82rem">${s.nome} <span style="color:var(--muted);font-size:.72rem">— ${s.gestor}</span></span>
+      <button class="btn-add-colab" onclick="editarSetorForm('${key}')">Editar</button>
+      <button class="btn-rm" onclick="removerSetor('${key}')">Remover</button>
+    </div>`).join('') || '<p style="font-size:.76rem;color:var(--muted)">Nenhum setor cadastrado.</p>';
+}
+function setorFormHtml(key) {
+  const s = key ? SD[key] : { icon:'🏷️', nome:'', gestor:'Gestor', temMultiplosAux:false };
+  return `<div style="border:1px solid var(--gold);border-radius:8px;padding:14px;background:var(--card2)">
+    <div class="cfg-grid">
+      <div><label>Ícone (emoji)</label><input type="text" id="nsf-icon" value="${s.icon}" maxlength="4"></div>
+      <div><label>Nome do Setor</label><input type="text" id="nsf-nome" value="${(s.nome||'').replace(/"/g,'&quot;')}"></div>
+      <div><label>Nome do Gestor</label><input type="text" id="nsf-gestor" value="${(s.gestor||'').replace(/"/g,'&quot;')}"></div>
+      <div><label style="display:flex;align-items:center;gap:6px;margin-top:18px;font-size:.75rem"><input type="checkbox" id="nsf-multi" ${s.temMultiplosAux?'checked':''} style="width:auto"> Múltiplos auxiliares</label></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn-gold-sm" onclick="salvarSetorForm(${key?`'${key}'`:'null'})">${key?'Salvar Alterações':'Criar Setor'}</button>
+      <button class="btn-cancel" onclick="document.getElementById('setor-form-area').innerHTML=''">Cancelar</button>
+    </div>
+    ${!key?'<p style="font-size:.7rem;color:var(--muted);margin-top:8px">Depois de criar, selecione o setor no Editor de Indicadores acima para adicionar os indicadores dele.</p>':''}
+  </div>`;
+}
+window.abrirNovoSetorForm = () => { document.getElementById('setor-form-area').innerHTML = setorFormHtml(null); };
+window.editarSetorForm = (key) => { document.getElementById('setor-form-area').innerHTML = setorFormHtml(key); };
+window.salvarSetorForm = async (key) => {
+  const icon = document.getElementById('nsf-icon').value.trim() || '🏷️';
+  const nome = document.getElementById('nsf-nome').value.trim();
+  const gestor = document.getElementById('nsf-gestor').value.trim() || 'Gestor';
+  const temMultiplosAux = document.getElementById('nsf-multi').checked;
+  if(!nome){ toast('⚠️ Digite o nome do setor'); return; }
+  try{
+    if(!key){
+      key = slugSetor(nome);
+      SD[key] = {
+        icon, nome, gestor, status:'ativo', temMultiplosAux,
+        colG:`lancamentos_custom_${key}_g`, colA:`lancamentos_custom_${key}_a`,
+        cfgSenhas:`senhas_custom_${key}`, cfgColabs:`colaboradores_custom_${key}`,
+        cfgMetasG:`metas_gestor_custom_${key}`, cfgMetasA:`metas_auxiliar_custom_${key}`,
+        colabsDefault: temMultiplosAux ? ['Auxiliar 1'] : undefined,
+        mG:{}, mA:{},
+      };
+      SETORES_CUSTOM.overrides[key] = { ...SD[key] };
+    } else {
+      Object.assign(SD[key], { icon, nome, gestor, temMultiplosAux });
+      SETORES_CUSTOM.overrides[key] = { ...(SETORES_CUSTOM.overrides[key]||{}), icon, nome, gestor, temMultiplosAux };
+    }
+    await setDoc(doc(db,'config','setores_custom'), SETORES_CUSTOM);
+    toast(key?'✅ Setor salvo!':'✅ Setor criado! Agora adicione os indicadores dele no Editor de Indicadores.');
+    document.getElementById('setor-form-area').innerHTML='';
+    renderSidebar(); renderGeralLogado();
+  }catch(e){ toast('❌ Erro ao salvar setor'); }
+};
+window.removerSetor = async (key) => {
+  const s = SD[key]; if(!s) return;
+  if(!confirm(`Remover o setor "${s.nome}" do menu? Os lançamentos já salvos continuam no banco, só ficam ocultos.`)) return;
+  try{
+    delete SD[key];
+    if(!SETORES_CUSTOM.removidos.includes(key)) SETORES_CUSTOM.removidos.push(key);
+    delete SETORES_CUSTOM.overrides[key];
+    await setDoc(doc(db,'config','setores_custom'), SETORES_CUSTOM);
+    toast('✅ Setor removido do menu!');
+    renderSidebar(); renderGeralLogado();
+  }catch(e){ toast('❌ Erro ao remover setor'); }
 };
 
 const gcColabsMap={};
