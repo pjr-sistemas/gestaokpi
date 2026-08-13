@@ -357,8 +357,6 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, collection, addDoc, getDocs, query, where,
          doc, setDoc, getDoc, orderBy, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { jsPDF } from 'https://esm.sh/jspdf@2.5.2';
-import 'https://esm.sh/jspdf-autotable@3.8.4';
 
 const fbApp = initializeApp({
   apiKey:"AIzaSyDTqmtUcFa2EZTD304RYb_vb6BLvo9PknQ",
@@ -1154,6 +1152,11 @@ window.gerarRelatorioPDF = async () => {
   const periodos=[{mes,ano}, mesAnteriorN(mes,ano,1), mesAnteriorN(mes,ano,2)];
   if(btn){ btn.disabled=true; btn.textContent='Gerando...'; }
   try{
+    const [{ jsPDF }, autoTableMod] = await Promise.all([
+      import('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/+esm'),
+      import('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/+esm'),
+    ]);
+    autoTableMod.applyPlugin(jsPDF);
     const dadosPorMes = await Promise.all(periodos.map(async p=>{
       const snap = await getDocs(query(collection(db,s.colG),where('mes','==',p.mes),where('ano','==',p.ano)));
       const t = agregarMes(snap.docs.map(d=>d.data()), MG);
