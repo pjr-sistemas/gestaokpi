@@ -857,7 +857,10 @@ async function selecionarColaborador(key) {
   document.getElementById('main-content').innerHTML=`
     <div class="setor-portal">
       <div class="portal-header"><h2>${s.icon} ${s.nome} — Auxiliar</h2><p>Selecione seu nome para continuar</p></div>
-      <button class="btn-sair-setor" style="margin-bottom:14px" onclick="sairSetor()">← Voltar ao login do setor</button>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn-sair-setor" onclick="sairSetor()">← Voltar ao login do setor</button>
+        <button class="btn-gold-sm" id="btn-relatorio-aux-pdf" onclick="gerarRelatorioAuxiliaresPDF('${key}')">📄 Gerar Relatório PDF</button>
+      </div>
       <div style="display:flex;flex-direction:column;gap:10px;max-width:320px">
         ${colabs.map(n=>`
         <div onclick="selecionarNome('${n.replace(/'/g,"\\'")}','${key}')"
@@ -1203,6 +1206,156 @@ function pdfDesenharGraficoComparativo(docPdf, x, y, w, keys, MG, niveisPorMes, 
   });
   return baseY + 12;
 }
+// Gráfico de barras comparando o desempenho médio (0-3) de cada auxiliar, já ordenados do melhor pro pior
+function pdfDesenharGraficoAuxiliares(docPdf, x, y, w, ordenados) {
+  const h = 62, baseY = y + h;
+  const nivelLbls = ['Fora','Bronze','Prata','Ouro'];
+  docPdf.setDrawColor(225,225,225);
+  for(let i=0;i<=3;i++){
+    const yy = baseY - (i/3)*h;
+    docPdf.line(x, yy, x+w, yy);
+    docPdf.setFontSize(6.5); docPdf.setTextColor(...PDF_COR.gray);
+    docPdf.text(nivelLbls[i], x-2, yy+1.5, { align:'right' });
+  }
+  docPdf.setDrawColor(180,180,180);
+  docPdf.line(x, y, x, baseY);
+  docPdf.line(x, baseY, x+w, baseY);
+
+  const n = ordenados.length || 1;
+  const groupW = w / n;
+  const barW = Math.max(3, Math.min(12, groupW*0.55));
+  ordenados.forEach((c,i)=>{
+    const barX = x + i*groupW + (groupW-barW)/2;
+    const score = c.scoreMedio;
+    const cor = score===null ? [210,210,210] : score>=2.5?PDF_COR.ouro : score>=1.5?PDF_COR.prata : score>=0.5?PDF_COR.bronze : [190,80,70];
+    const barH = score===null ? 1 : (score/3)*h;
+    docPdf.setFillColor(...cor);
+    docPdf.rect(barX, baseY-barH, barW, barH, 'F');
+    docPdf.setFontSize(6); docPdf.setTextColor(...PDF_COR.dark);
+    const lbl = c.nome.length>14 ? c.nome.slice(0,13)+'.' : c.nome;
+    docPdf.text(lbl, x+i*groupW+groupW/2, baseY+3, { angle:60, align:'right' });
+  });
+}
+window.gerarRelatorioAuxiliaresPDF = async (key) => {
+  const btn = document.getElementById('btn-relatorio-aux-pdf');
+  const s = SD[key];
+  const hoje = new Date(); const mes = hoje.getMonth()+1; const ano = hoje.getFullYear();
+  if(btn){ btn.disabled=true; btn.textContent='Gerando...'; }
+  try{
+    const [{ jsPDF }, autoTableMod] = await Promise.all([
+      import('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/+esm'),
+      import('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/+esm'),
+    ]);
+    autoTableMod.applyPlugin(jsPDF);
+
+    let colabs=[];
+    try{ const snap=await getDoc(doc(db,'config',s.cfgColabs)); colabs=snap.exists()?(snap.data().lista||[]):(s.colabsDefault||[]); }
+    catch(e){ colabs = s.colabsDefault||[]; }
+    if(!colabs.length){ toast('⚠️ Nenhum auxiliar cadastrado'); return; }
+
+    const rankNv = {'Fora':0,'Bronze':1,'Prata':2,'Ouro':3};
+    const dadosColabs = await Promise.all(colabs.map(async nome=>{
+      const mAc = metasColab(s, nome);
+      const q = query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',nome));
+      const snap = await getDocs(q);
+      const t = agregarMes(snap.docs.map(d=>d.data()), mAc);
+      const bonif = calcTotal(t, mAc);
+      const niveis = Object.keys(mAc).map(k=>avaliar(k,t[k],mAc));
+      const validos = niveis.filter(n=>n!=='sem-dado');
+      const scoreMedio = validos.length ? validos.reduce((a,n)=>a+rankNv[n],0)/validos.length : null;
+      const grupo = (s.gruposAux && s.colabGrupos) ? (s.gruposAux[s.colabGrupos[nome]]?.nome||'') : '';
+      const cnt = nv => niveis.filter(x=>x===nv).length;
+      return { nome, grupo, bonif, scoreMedio, ouro:cnt('Ouro'), prata:cnt('Prata'), bronze:cnt('Bronze'), fora:cnt('Fora') };
+    }));
+
+    const ordenados = [...dadosColabs].sort((a,b)=>{
+      if(a.scoreMedio===null && b.scoreMedio===null) return 0;
+      if(a.scoreMedio===null) return 1;
+      if(b.scoreMedio===null) return -1;
+      return b.scoreMedio - a.scoreMedio;
+    });
+
+    const docPdf = new jsPDF();
+    const PW=210, MARGEM=14, USAVEL=PW-MARGEM*2;
+    const mesLbl = `${MESES[mes-1]}/${ano}`;
+
+    docPdf.setFillColor(...PDF_COR.gold);
+    docPdf.rect(0, 0, PW, 24, 'F');
+    docPdf.setFontSize(16); docPdf.setTextColor(255,255,255);
+    docPdf.text(`${s.nome} - Relatorio de Auxiliares`, MARGEM, 15);
+    docPdf.setFontSize(9); docPdf.setTextColor(255,255,255);
+    docPdf.text(`Mes vigente: ${mesLbl}  |  ${colabs.length} auxiliares  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
+
+    let y = 34;
+    const temGrupos = !!s.gruposAux;
+    const pdfVal2 = v => v===null||v===undefined ? 'N/D' : v.toFixed(1);
+    const head = temGrupos ? [['#','Auxiliar','Grupo','Ouro','Prata','Bronze','Fora','Score (0-3)']] : [['#','Auxiliar','Ouro','Prata','Bronze','Fora','Score (0-3)']];
+    const rows = ordenados.map((c,i)=>{
+      const base = [String(i+1), c.nome];
+      if(temGrupos) base.push(c.grupo);
+      base.push(String(c.ouro), String(c.prata), String(c.bronze), String(c.fora), pdfVal2(c.scoreMedio));
+      return base;
+    });
+    docPdf.autoTable({
+      startY:y,
+      margin: { left:MARGEM, right:MARGEM },
+      head, body: rows,
+      styles: { fontSize:8, cellPadding:2.6, valign:'middle', lineColor:[225,225,225] },
+      headStyles: { fillColor:PDF_COR.gold, textColor:[255,255,255], fontStyle:'bold' },
+      alternateRowStyles: { fillColor:[249,247,241] },
+      didParseCell: (data) => {
+        const scoreColIdx = temGrupos ? 7 : 6;
+        if(data.section==='body' && data.column.index===scoreColIdx){
+          const c = ordenados[data.row.index];
+          if(c.scoreMedio!==null && c.scoreMedio<1){ data.cell.styles.textColor=[190,50,40]; data.cell.styles.fontStyle='bold'; }
+          else if(c.scoreMedio!==null && c.scoreMedio<2){ data.cell.styles.textColor=[180,110,20]; data.cell.styles.fontStyle='bold'; }
+        }
+      },
+    });
+    y = docPdf.lastAutoTable.finalY + 10;
+
+    const precisamAtencao = ordenados.filter(c=>c.scoreMedio!==null && c.scoreMedio<1.5);
+    if(y > 250){ docPdf.addPage(); y = 20; }
+    docPdf.setFillColor(...PDF_COR.atencaoBg);
+    const boxH = precisamAtencao.length ? 10 + precisamAtencao.length*6 : 16;
+    docPdf.roundedRect(MARGEM, y-5, USAVEL, boxH, 1.5, 1.5, 'F');
+    docPdf.setFontSize(11); docPdf.setTextColor(...PDF_COR.atencaoTxt); docPdf.setFont(undefined,'bold');
+    docPdf.text('Precisam de Orientacao', MARGEM+4, y+1); y+=8;
+    docPdf.setFont(undefined,'normal');
+    docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark);
+    if(!precisamAtencao.length){
+      docPdf.text('Nenhum auxiliar com desempenho critico neste mes.', MARGEM+4, y);
+      y += 8;
+    } else {
+      precisamAtencao.forEach(c=>{
+        docPdf.text(`- ${c.nome}: score medio ${c.scoreMedio.toFixed(1)}/3 (${c.fora} Fora, ${c.bronze} Bronze)`, MARGEM+4, y);
+        y += 6;
+      });
+    }
+    y += 10;
+
+    if(y + 80 > 280){ docPdf.addPage(); y = 20; }
+    docPdf.setFontSize(11); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+    docPdf.text('Comparativo entre Auxiliares (desempenho medio, do melhor pro pior)', MARGEM, y);
+    docPdf.setFont(undefined,'normal');
+    y += 10;
+    pdfDesenharGraficoAuxiliares(docPdf, MARGEM+8, y, USAVEL-8, ordenados);
+
+    const totalPaginas = docPdf.internal.getNumberOfPages();
+    for(let p=1;p<=totalPaginas;p++){
+      docPdf.setPage(p);
+      docPdf.setFontSize(7); docPdf.setTextColor(...PDF_COR.gray);
+      docPdf.text(`Gestao KPI - ${s.nome} (Auxiliares)  |  Pagina ${p}/${totalPaginas}`, MARGEM, 291);
+    }
+
+    docPdf.save(`relatorio_auxiliares_${s.nome.replace(/[^a-zA-Z0-9]+/g,'_')}_${mesLbl.replace('/','_')}.pdf`);
+    toast('✅ Relatório PDF gerado!');
+  }catch(e){
+    toast('❌ Erro ao gerar relatório');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='📄 Gerar Relatório PDF'; }
+  }
+};
 window.gerarRelatorioPDF = async () => {
   const btn=document.getElementById('btn-relatorio-pdf');
   const s=SD[setorLogado];
@@ -1295,8 +1448,8 @@ window.gerarRelatorioPDF = async () => {
       didParseCell: (data) => {
         if(data.section==='body' && data.column.index===2){
           const nv = niveisAtuais[data.row.index];
-          if(nv==='Fora') data.cell.styles.fillColor=[250,222,220];
-          else if(nv==='Bronze') data.cell.styles.fillColor=[252,236,212];
+          if(nv==='Fora'){ data.cell.styles.textColor=[190,50,40]; data.cell.styles.fontStyle='bold'; }
+          else if(nv==='Bronze'){ data.cell.styles.textColor=[180,110,20]; data.cell.styles.fontStyle='bold'; }
         }
       },
     });
