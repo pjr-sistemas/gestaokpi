@@ -357,6 +357,8 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, collection, addDoc, getDocs, query, where,
          doc, setDoc, getDoc, orderBy, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { jsPDF } from 'https://esm.sh/jspdf@2.5.2';
+import 'https://esm.sh/jspdf-autotable@3.8.4';
 
 const fbApp = initializeApp({
   apiKey:"AIzaSyDTqmtUcFa2EZTD304RYb_vb6BLvo9PknQ",
@@ -942,6 +944,9 @@ function renderSetorLogado() {
       </div>
       ${isGestor?`
       <div id="tab-dash" class="tab-pane">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="btn-gold-sm" id="btn-relatorio-pdf" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
+        </div>
         <div class="dash-kpis">
           <div class="dash-kpi"><div class="dk-label">Bonif. Gestor</div><div class="dk-val" id="dk-g">—</div></div>
           <div class="dash-kpi"><div class="dk-label">Bonif. Auxiliar</div><div class="dk-val" id="dk-a">—</div></div>
@@ -1134,6 +1139,105 @@ function renderGrafico(s1,s2) {
   const lbls=['J','F','M','A','M','J','J','A','S','O','N','D'].map((l,i)=>`<text x="${x(i)}" y="${H-4}" fill="#555" font-size="11" text-anchor="middle">${l}</text>`).join('');
   svg.innerHTML=`<polyline fill="none" stroke="#C9A84C" stroke-width="2.5" stroke-linejoin="round" points="${pts(s1)}"/><polyline fill="none" stroke="#6b8cff" stroke-width="2.5" stroke-linejoin="round" points="${pts(s2)}"/>${s1.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#C9A84C"/>`).join('')}${s2.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#6b8cff"/>`).join('')}${lbls}`;
 }
+
+// ── Relatório PDF do Dashboard (mês vigente x 2 meses anteriores) ──
+function mesAnteriorN(mes, ano, n) {
+  let m=mes-n, a=ano;
+  while(m<=0){ m+=12; a--; }
+  return {mes:m, ano:a};
+}
+window.gerarRelatorioPDF = async () => {
+  const btn=document.getElementById('btn-relatorio-pdf');
+  const s=SD[setorLogado];
+  const mes=parseInt(document.getElementById('s-mes').value);
+  const ano=parseInt(document.getElementById('s-ano').value);
+  const periodos=[{mes,ano}, mesAnteriorN(mes,ano,1), mesAnteriorN(mes,ano,2)];
+  if(btn){ btn.disabled=true; btn.textContent='Gerando...'; }
+  try{
+    const dadosPorMes = await Promise.all(periodos.map(async p=>{
+      const snap = await getDocs(query(collection(db,s.colG),where('mes','==',p.mes),where('ano','==',p.ano)));
+      const t = agregarMes(snap.docs.map(d=>d.data()), MG);
+      return { ...p, t, bonif: calcTotal(t, MG) };
+    }));
+    const [atual, ant1, ant2] = dadosPorMes;
+    const mesLabel = p => `${MESES[p.mes-1].slice(0,3)}/${p.ano}`;
+    const rankNv = {'Fora':0,'Bronze':1,'Prata':2,'Ouro':3};
+    const seta = (nvA,nvB) => {
+      if(rankNv[nvA]===undefined||rankNv[nvB]===undefined) return '—';
+      if(rankNv[nvA]>rankNv[nvB]) return '↑ melhorou';
+      if(rankNv[nvA]<rankNv[nvB]) return '↓ piorou';
+      return '→ manteve';
+    };
+
+    const docPdf = new jsPDF();
+    const gold=[180,140,50];
+    docPdf.setFontSize(16); docPdf.setTextColor(20,20,20);
+    docPdf.text(`${s.nome} — Relatório de Desempenho`, 14, 18);
+    docPdf.setFontSize(10); docPdf.setTextColor(100,100,100);
+    docPdf.text(`Gestor: ${s.gestor}   ·   Mês vigente: ${mesLabel(atual)}   ·   Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 14, 25);
+    docPdf.text(`Comparação com: ${mesLabel(ant1)} e ${mesLabel(ant2)}`, 14, 30);
+
+    let startY = 36;
+    if(adminUnlocked){
+      docPdf.setFontSize(10); docPdf.setTextColor(20,20,20);
+      docPdf.text(`Bonificação Gestor — ${mesLabel(atual)}: R$ ${atual.bonif.toFixed(2).replace('.',',')}   |   ${mesLabel(ant1)}: R$ ${ant1.bonif.toFixed(2).replace('.',',')}   |   ${mesLabel(ant2)}: R$ ${ant2.bonif.toFixed(2).replace('.',',')}`, 14, 38);
+      startY = 44;
+    }
+
+    const keys = Object.keys(MG);
+    const niveisAtuais = keys.map(k=>avaliar(k, atual.t[k], MG));
+    const rows = keys.map((k,i)=>{
+      const m=MG[k]; const nvAtual=niveisAtuais[i]; const nvAnt1=avaliar(k, ant1.t[k], MG);
+      const meta = `${m.tipo==='maior'?'≥':'≤'}${m.ouro}${m.unit} (Ouro)`;
+      return [ m.label, meta,
+        `${fmtVal(atual.t[k],m.unit)} · ${nvAtual}`,
+        `${fmtVal(ant1.t[k],m.unit)} · ${nvAnt1}`,
+        `${fmtVal(ant2.t[k],m.unit)} · ${avaliar(k, ant2.t[k], MG)}`,
+        seta(nvAtual,nvAnt1) ];
+    });
+
+    docPdf.autoTable({
+      startY,
+      head: [['Indicador','Meta',mesLabel(atual),mesLabel(ant1),mesLabel(ant2),'Tendência']],
+      body: rows,
+      styles: { fontSize:8, cellPadding:3 },
+      headStyles: { fillColor:gold, textColor:[10,10,10] },
+      didParseCell: (data) => {
+        if(data.section==='body' && data.column.index===2){
+          const nv = niveisAtuais[data.row.index];
+          if(nv==='Fora') data.cell.styles.fillColor=[250,205,205];
+          else if(nv==='Bronze') data.cell.styles.fillColor=[250,230,205];
+        }
+      },
+    });
+
+    let y = docPdf.lastAutoTable.finalY + 10;
+    const atencao = keys.filter((k,i)=>{
+      const nvAtual=niveisAtuais[i]; const nvAnt1=avaliar(k, ant1.t[k], MG);
+      return nvAtual==='Fora' || nvAtual==='Bronze' || (rankNv[nvAtual]!==undefined && rankNv[nvAnt1]!==undefined && rankNv[nvAtual]<rankNv[nvAnt1]);
+    });
+    docPdf.setFontSize(12); docPdf.setTextColor(180,60,40);
+    docPdf.text('⚠ Pontos de Atenção', 14, y); y+=7;
+    docPdf.setFontSize(9); docPdf.setTextColor(30,30,30);
+    if(!atencao.length){
+      docPdf.text('Nenhum indicador crítico neste mês — bom trabalho!', 14, y);
+    } else {
+      atencao.forEach(k=>{
+        const m=MG[k]; const i=keys.indexOf(k); const nvAtual=niveisAtuais[i]; const nvAnt1=avaliar(k, ant1.t[k], MG);
+        const linha = `• ${m.label}: ${fmtVal(atual.t[k],m.unit)} (${nvAtual}) — ${seta(nvAtual,nvAnt1)} em relação a ${mesLabel(ant1)}`;
+        const wrapped = docPdf.splitTextToSize(linha, 180);
+        docPdf.text(wrapped, 14, y); y += wrapped.length*5 + 2;
+      });
+    }
+
+    docPdf.save(`relatorio_${s.nome.replace(/[^a-zA-Z0-9]+/g,'_')}_${mesLabel(atual).replace('/','_')}.pdf`);
+    toast('✅ Relatório PDF gerado!');
+  }catch(e){
+    toast('❌ Erro ao gerar relatório');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='📄 Gerar Relatório PDF'; }
+  }
+};
 
 // ── Aux Ranking ──
 async function carregarAuxRanking(mes, ano) {
