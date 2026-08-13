@@ -1144,6 +1144,65 @@ function mesAnteriorN(mes, ano, n) {
   while(m<=0){ m+=12; a--; }
   return {mes:m, ano:a};
 }
+// Paleta usada no relatório (RGB) — só ASCII/Latin-1 é usado no texto do PDF,
+// já que a fonte padrão do jsPDF corrompe símbolos como ≥ ≤ ↑ ↓ → ⚠.
+const PDF_COR = {
+  gold:[180,140,50], goldLight:[232,201,107], dark:[30,30,30], gray:[110,110,110],
+  lightGray:[235,235,235], ouro:[190,150,40], prata:[140,140,140], bronze:[176,110,60],
+  fora:[190,190,190], atencaoBg:[253,236,220], atencaoTxt:[150,70,20],
+};
+function pdfNivelCor(nv){
+  return nv==='Ouro'?PDF_COR.ouro:nv==='Prata'?PDF_COR.prata:nv==='Bronze'?PDF_COR.bronze:PDF_COR.fora;
+}
+function pdfTendenciaTxt(nvA,nvB,rankNv){
+  if(rankNv[nvA]===undefined||rankNv[nvB]===undefined) return 'Sem dado anterior';
+  if(rankNv[nvA]>rankNv[nvB]) return 'Melhorou';
+  if(rankNv[nvA]<rankNv[nvB]) return 'Piorou';
+  return 'Manteve';
+}
+// Desenha um gráfico de barras comparando o nível (Fora/Bronze/Prata/Ouro) de cada indicador nos 3 meses
+function pdfDesenharGraficoComparativo(docPdf, x, y, w, keys, MG, niveisPorMes, mesLabels) {
+  const h = 62, baseY = y + h;
+  const nivelLbls = ['Fora','Bronze','Prata','Ouro'];
+  docPdf.setDrawColor(225,225,225);
+  for(let i=0;i<=3;i++){
+    const yy = baseY - (i/3)*h;
+    docPdf.line(x, yy, x+w, yy);
+    docPdf.setFontSize(6.5); docPdf.setTextColor(...PDF_COR.gray);
+    docPdf.text(nivelLbls[i], x-2, yy+1.5, { align:'right' });
+  }
+  docPdf.setDrawColor(180,180,180);
+  docPdf.line(x, y, x, baseY);
+  docPdf.line(x, baseY, x+w, baseY);
+
+  const coresMes = [PDF_COR.gold, [110,130,175], [195,195,195]];
+  const groupW = w / keys.length;
+  const barW = Math.max(2.2, Math.min(6, (groupW-4)/3));
+  keys.forEach((k,gi)=>{
+    const groupX = x + gi*groupW + (groupW-3*barW)/2;
+    [0,1,2].forEach(mi=>{
+      const nv = niveisPorMes[mi][gi];
+      if(nv===null||nv===undefined) return;
+      const barH = (nv/3)*h;
+      docPdf.setFillColor(...coresMes[mi]);
+      docPdf.rect(groupX+mi*barW, baseY-barH, barW-0.4, barH, 'F');
+    });
+    docPdf.setFontSize(6); docPdf.setTextColor(...PDF_COR.dark);
+    const lbl = MG[k].label.length>16 ? MG[k].label.slice(0,15)+'.' : MG[k].label;
+    docPdf.text(lbl, x+gi*groupW+groupW/2, baseY+3, { angle:60, align:'right' });
+  });
+
+  const legY = y - 4;
+  let legX = x + w - 3*38;
+  mesLabels.forEach((lbl,i)=>{
+    docPdf.setFillColor(...coresMes[i]);
+    docPdf.rect(legX, legY-2.8, 3, 3, 'F');
+    docPdf.setFontSize(7); docPdf.setTextColor(...PDF_COR.dark);
+    docPdf.text(lbl, legX+4.5, legY);
+    legX += 38;
+  });
+  return baseY + 12;
+}
 window.gerarRelatorioPDF = async () => {
   const btn=document.getElementById('btn-relatorio-pdf');
   const s=SD[setorLogado];
@@ -1165,72 +1224,123 @@ window.gerarRelatorioPDF = async () => {
     const [atual, ant1, ant2] = dadosPorMes;
     const mesLabel = p => `${MESES[p.mes-1].slice(0,3)}/${p.ano}`;
     const rankNv = {'Fora':0,'Bronze':1,'Prata':2,'Ouro':3};
-    const seta = (nvA,nvB) => {
-      if(rankNv[nvA]===undefined||rankNv[nvB]===undefined) return '—';
-      if(rankNv[nvA]>rankNv[nvB]) return '↑ melhorou';
-      if(rankNv[nvA]<rankNv[nvB]) return '↓ piorou';
-      return '→ manteve';
-    };
-
-    const docPdf = new jsPDF();
-    const gold=[180,140,50];
-    docPdf.setFontSize(16); docPdf.setTextColor(20,20,20);
-    docPdf.text(`${s.nome} — Relatório de Desempenho`, 14, 18);
-    docPdf.setFontSize(10); docPdf.setTextColor(100,100,100);
-    docPdf.text(`Gestor: ${s.gestor}   ·   Mês vigente: ${mesLabel(atual)}   ·   Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 14, 25);
-    docPdf.text(`Comparação com: ${mesLabel(ant1)} e ${mesLabel(ant2)}`, 14, 30);
-
-    let startY = 36;
-    if(adminUnlocked){
-      docPdf.setFontSize(10); docPdf.setTextColor(20,20,20);
-      docPdf.text(`Bonificação Gestor — ${mesLabel(atual)}: R$ ${atual.bonif.toFixed(2).replace('.',',')}   |   ${mesLabel(ant1)}: R$ ${ant1.bonif.toFixed(2).replace('.',',')}   |   ${mesLabel(ant2)}: R$ ${ant2.bonif.toFixed(2).replace('.',',')}`, 14, 38);
-      startY = 44;
-    }
 
     const keys = Object.keys(MG);
     const niveisAtuais = keys.map(k=>avaliar(k, atual.t[k], MG));
+    const niveisAnt1 = keys.map(k=>avaliar(k, ant1.t[k], MG));
+    const niveisAnt2 = keys.map(k=>avaliar(k, ant2.t[k], MG));
+    const rankPorMes = [niveisAtuais, niveisAnt1, niveisAnt2].map(arr=>arr.map(nv=>rankNv[nv]===undefined?null:rankNv[nv]));
+
+    const docPdf = new jsPDF();
+    const PW = 210, MARGEM = 14, USAVEL = PW - MARGEM*2;
+
+    // ── Cabeçalho ──
+    docPdf.setFillColor(...PDF_COR.gold);
+    docPdf.rect(0, 0, PW, 24, 'F');
+    docPdf.setFontSize(16); docPdf.setTextColor(255,255,255);
+    docPdf.text(`${s.nome} - Relatorio de Desempenho`, MARGEM, 15);
+    docPdf.setFontSize(9); docPdf.setTextColor(255,255,255);
+    docPdf.text(`Gestor: ${s.gestor}  |  Mes vigente: ${mesLabel(atual)}  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
+
+    docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.gray);
+    docPdf.text(`Comparacao com: ${mesLabel(ant1)} e ${mesLabel(ant2)}`, MARGEM, 32);
+
+    // ── Placar do mês vigente ──
+    const cnt = nv => niveisAtuais.filter(x=>x===nv).length;
+    const placar = [['Ouro',cnt('Ouro'),PDF_COR.ouro],['Prata',cnt('Prata'),PDF_COR.prata],['Bronze',cnt('Bronze'),PDF_COR.bronze],['Fora',cnt('Fora'),[190,80,70]]];
+    const boxW = USAVEL/4, boxY = 37, boxH = 16;
+    placar.forEach(([lbl,n,cor],i)=>{
+      const bx = MARGEM + i*boxW;
+      docPdf.setDrawColor(220,220,220); docPdf.setFillColor(250,250,250);
+      docPdf.roundedRect(bx, boxY, boxW-3, boxH, 1.5, 1.5, 'FD');
+      docPdf.setFontSize(13); docPdf.setTextColor(...cor);
+      docPdf.text(String(n), bx+5, boxY+10);
+      docPdf.setFontSize(7); docPdf.setTextColor(...PDF_COR.gray);
+      docPdf.text(lbl, bx+5, boxY+14.5);
+    });
+
+    let startY = boxY + boxH + 8;
+    if(adminUnlocked){
+      docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark);
+      docPdf.text(`Bonificacao Gestor:  ${mesLabel(atual)} R$ ${atual.bonif.toFixed(2).replace('.',',')}   |   ${mesLabel(ant1)} R$ ${ant1.bonif.toFixed(2).replace('.',',')}   |   ${mesLabel(ant2)} R$ ${ant2.bonif.toFixed(2).replace('.',',')}`, MARGEM, startY);
+      startY += 6;
+    }
+
+    // ── Tabela comparativa ──
+    const pdfVal = (v,u) => fmtVal(v,u).replace(/—/g,'-');
+    const pdfLabel = lbl => lbl.length>42 ? lbl.slice(0,41)+'.' : lbl;
     const rows = keys.map((k,i)=>{
-      const m=MG[k]; const nvAtual=niveisAtuais[i]; const nvAnt1=avaliar(k, ant1.t[k], MG);
-      const meta = `${m.tipo==='maior'?'≥':'≤'}${m.ouro}${m.unit} (Ouro)`;
-      return [ m.label, meta,
-        `${fmtVal(atual.t[k],m.unit)} · ${nvAtual}`,
-        `${fmtVal(ant1.t[k],m.unit)} · ${nvAnt1}`,
-        `${fmtVal(ant2.t[k],m.unit)} · ${avaliar(k, ant2.t[k], MG)}`,
-        seta(nvAtual,nvAnt1) ];
+      const m=MG[k];
+      const metaTxt = `${m.tipo==='maior'?'Min.':'Max.'} ${m.ouro}${m.unit} (Ouro)`;
+      return [ pdfLabel(m.label), metaTxt,
+        `${pdfVal(atual.t[k],m.unit)} - ${niveisAtuais[i]}`,
+        `${pdfVal(ant1.t[k],m.unit)} - ${niveisAnt1[i]}`,
+        `${pdfVal(ant2.t[k],m.unit)} - ${niveisAnt2[i]}`,
+        pdfTendenciaTxt(niveisAtuais[i],niveisAnt1[i],rankNv) ];
     });
 
     docPdf.autoTable({
       startY,
-      head: [['Indicador','Meta',mesLabel(atual),mesLabel(ant1),mesLabel(ant2),'Tendência']],
+      margin: { left:MARGEM, right:MARGEM },
+      head: [['Indicador','Meta',mesLabel(atual),mesLabel(ant1),mesLabel(ant2),'Tendencia']],
       body: rows,
-      styles: { fontSize:8, cellPadding:3 },
-      headStyles: { fillColor:gold, textColor:[10,10,10] },
+      styles: { fontSize:8, cellPadding:2.6, valign:'middle', lineColor:[225,225,225] },
+      headStyles: { fillColor:PDF_COR.gold, textColor:[255,255,255], fontStyle:'bold' },
+      alternateRowStyles: { fillColor:[249,247,241] },
+      columnStyles: {
+        0:{ cellWidth:46 }, 1:{ cellWidth:32 },
+        2:{ cellWidth:27 }, 3:{ cellWidth:27 }, 4:{ cellWidth:27 },
+        5:{ cellWidth:'auto' },
+      },
       didParseCell: (data) => {
         if(data.section==='body' && data.column.index===2){
           const nv = niveisAtuais[data.row.index];
-          if(nv==='Fora') data.cell.styles.fillColor=[250,205,205];
-          else if(nv==='Bronze') data.cell.styles.fillColor=[250,230,205];
+          if(nv==='Fora') data.cell.styles.fillColor=[250,222,220];
+          else if(nv==='Bronze') data.cell.styles.fillColor=[252,236,212];
         }
       },
     });
 
     let y = docPdf.lastAutoTable.finalY + 10;
+
+    // ── Pontos de atenção ──
     const atencao = keys.filter((k,i)=>{
-      const nvAtual=niveisAtuais[i]; const nvAnt1=avaliar(k, ant1.t[k], MG);
-      return nvAtual==='Fora' || nvAtual==='Bronze' || (rankNv[nvAtual]!==undefined && rankNv[nvAnt1]!==undefined && rankNv[nvAtual]<rankNv[nvAnt1]);
+      return niveisAtuais[i]==='Fora' || niveisAtuais[i]==='Bronze' || (rankNv[niveisAtuais[i]]!==undefined && rankNv[niveisAnt1[i]]!==undefined && rankNv[niveisAtuais[i]]<rankNv[niveisAnt1[i]]);
     });
-    docPdf.setFontSize(12); docPdf.setTextColor(180,60,40);
-    docPdf.text('⚠ Pontos de Atenção', 14, y); y+=7;
-    docPdf.setFontSize(9); docPdf.setTextColor(30,30,30);
+    if(y > 250){ docPdf.addPage(); y = 20; }
+    docPdf.setFillColor(...PDF_COR.atencaoBg);
+    const boxAlturaEstimada = atencao.length ? 10 + atencao.length*6 : 16;
+    docPdf.roundedRect(MARGEM, y-5, USAVEL, boxAlturaEstimada, 1.5, 1.5, 'F');
+    docPdf.setFontSize(11); docPdf.setTextColor(...PDF_COR.atencaoTxt); docPdf.setFont(undefined,'bold');
+    docPdf.text('Pontos de Atencao', MARGEM+4, y+1); y+=8;
+    docPdf.setFont(undefined,'normal');
+    docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark);
     if(!atencao.length){
-      docPdf.text('Nenhum indicador crítico neste mês — bom trabalho!', 14, y);
+      docPdf.text('Nenhum indicador critico neste mes - bom trabalho!', MARGEM+4, y);
+      y += 8;
     } else {
       atencao.forEach(k=>{
-        const m=MG[k]; const i=keys.indexOf(k); const nvAtual=niveisAtuais[i]; const nvAnt1=avaliar(k, ant1.t[k], MG);
-        const linha = `• ${m.label}: ${fmtVal(atual.t[k],m.unit)} (${nvAtual}) — ${seta(nvAtual,nvAnt1)} em relação a ${mesLabel(ant1)}`;
-        const wrapped = docPdf.splitTextToSize(linha, 180);
-        docPdf.text(wrapped, 14, y); y += wrapped.length*5 + 2;
+        const i=keys.indexOf(k); const m=MG[k];
+        const linha = `- ${m.label}: ${pdfVal(atual.t[k],m.unit)} (${niveisAtuais[i]}) - ${pdfTendenciaTxt(niveisAtuais[i],niveisAnt1[i],rankNv)} em relacao a ${mesLabel(ant1)}`;
+        docPdf.text(linha, MARGEM+4, y);
+        y += 6;
       });
+    }
+    y += 10;
+
+    // ── Gráfico comparativo ──
+    if(y + 85 > 280){ docPdf.addPage(); y = 20; }
+    docPdf.setFontSize(11); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+    docPdf.text('Comparativo Visual dos Indicadores (nivel por mes)', MARGEM, y);
+    docPdf.setFont(undefined,'normal');
+    y += 10;
+    pdfDesenharGraficoComparativo(docPdf, MARGEM+8, y, USAVEL-8, keys, MG, rankPorMes, [mesLabel(atual),mesLabel(ant1),mesLabel(ant2)]);
+
+    const totalPaginas = docPdf.internal.getNumberOfPages();
+    for(let p=1;p<=totalPaginas;p++){
+      docPdf.setPage(p);
+      docPdf.setFontSize(7); docPdf.setTextColor(...PDF_COR.gray);
+      docPdf.text(`Gestao KPI - ${s.nome}  |  Pagina ${p}/${totalPaginas}`, MARGEM, 291);
     }
 
     docPdf.save(`relatorio_${s.nome.replace(/[^a-zA-Z0-9]+/g,'_')}_${mesLabel(atual).replace('/','_')}.pdf`);
