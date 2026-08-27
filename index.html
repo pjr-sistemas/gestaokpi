@@ -350,6 +350,21 @@
   </div>
 </div>
 
+<div class="modal-bg" id="modal-resumo-setor">
+  <div class="modal" style="max-width:720px">
+    <h3 id="resumo-setor-titulo">Resumo do Setor</h3>
+    <p id="resumo-setor-sub" style="font-size:.8rem;color:var(--muted);margin-bottom:14px"></p>
+    <div id="resumo-setor-grid" class="indicadores-grid"></div>
+    <div class="total-bonif" style="margin-top:14px">
+      <span class="label">💰 Total Bonificação Gestor</span>
+      <span class="valor" id="resumo-setor-total-val"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModais()" style="flex:1">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script type="module">
@@ -635,6 +650,7 @@ function metasColab(s, nome){
 }
 let colabsEdit = [];
 let navAtivo = null;
+let geralSetorCache = {}; // key do setor -> {t, bG, mes, ano} (populado por atualizarGeral, usado pelo resumo do setor)
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 // ══ UTILS ══
@@ -1759,9 +1775,10 @@ window.atualizarGeral = async () => {
     totalBonif+=bG;
     const ouro=Object.keys(s.mG).filter(k=>avaliar(k,t[k],s.mG)==='Ouro').length;
     totalOuro+=ouro; totalInds+=Object.keys(s.mG).length;
-    const bars=Object.keys(s.mG).slice(0,4).map(k=>{ const nv=avaliar(k,t[k],s.mG); const pct=nv==='Ouro'?100:nv==='Prata'?70:nv==='Bronze'?45:20;
+    geralSetorCache[key] = { t, bG, mes, ano };
+    const bars=Object.keys(s.mG).map(k=>{ const nv=avaliar(k,t[k],s.mG); const pct=nv==='Ouro'?100:nv==='Prata'?70:nv==='Bronze'?45:20;
       return `<div class="sov-bar"><span class="sb-lbl">${s.mG[k].label}</span><div class="sb-trk"><div class="sb-fil ${nv}" style="width:${pct}%"></div></div></div>`; }).join('');
-    html+=`<div class="sov-card"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span class="sov-bonif">${fmtBonif(bG)}</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div><div class="sov-bars">${bars}</div><div style="margin-top:7px;font-size:.68rem;color:var(--muted)">${ouro}/${Object.keys(s.mG).length} indicadores Ouro</div></div>`;
+    html+=`<div class="sov-card" onclick="abrirResumoSetor('${key}')" title="Clique para ver o resumo completo do setor"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span class="sov-bonif">${fmtBonif(bG)}</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div><div class="sov-bars">${bars}</div><div style="margin-top:7px;font-size:.68rem;color:var(--muted)">${ouro}/${Object.keys(s.mG).length} indicadores Ouro</div></div>`;
   }
   Object.entries(SD).filter(([,s])=>s.status==='em_breve'&&!supervisorSetores).forEach(([,s])=>{
     html+=`<div class="sov-card em-breve"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span style="font-size:.65rem;color:var(--gold);background:#1e1600;border:1px solid var(--gold);border-radius:10px;padding:2px 8px">Em breve</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div></div>`;
@@ -1772,6 +1789,17 @@ window.atualizarGeral = async () => {
     <div class="dash-kpi"><div class="dk-label">Bonif. Total Gestores</div><div class="dk-val">${fmtBonif(totalBonif)}</div><div class="dk-sub">setores ativos</div></div>
     <div class="dash-kpi"><div class="dk-label">Setores</div><div class="dk-val" style="color:var(--success)">${setoresAtivos.length}/${supervisorSetores?supervisorSetores.length:10}</div></div>
     <div class="dash-kpi"><div class="dk-label">Indicadores Ouro</div><div class="dk-val" style="color:var(--ouro)">${totalOuro}/${totalInds}</div></div>`;
+};
+
+// Resumo completo de um setor (todos os indicadores, valores e bonificação) ao clicar no card de Status dos Setores
+window.abrirResumoSetor = (key) => {
+  const cache = geralSetorCache[key]; const s = SD[key];
+  if(!cache || !s) return;
+  document.getElementById('resumo-setor-titulo').innerHTML = `${s.icon} ${s.nome} — Resumo`;
+  document.getElementById('resumo-setor-sub').textContent = `Responsável: ${s.gestor}  ·  ${MESES[cache.mes-1]}/${cache.ano}`;
+  document.getElementById('resumo-setor-grid').innerHTML = renderCards(cache.t, s.mG);
+  document.getElementById('resumo-setor-total-val').textContent = fmtBonif(cache.bG);
+  document.getElementById('modal-resumo-setor').classList.add('open');
 };
 
 function renderCfgNomesSetores() {
