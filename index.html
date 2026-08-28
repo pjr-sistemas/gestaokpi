@@ -354,10 +354,25 @@
   <div class="modal" style="max-width:720px">
     <h3 id="resumo-setor-titulo">Resumo do Setor</h3>
     <p id="resumo-setor-sub" style="font-size:.8rem;color:var(--muted);margin-bottom:14px"></p>
-    <div id="resumo-setor-grid" class="indicadores-grid"></div>
-    <div class="total-bonif" style="margin-top:14px">
-      <span class="label">💰 Total Bonificação Gestor</span>
-      <span class="valor" id="resumo-setor-total-val"></span>
+    <div class="hist-toggle">
+      <button class="htog-btn active" id="resumo-tab-gestor" onclick="resumoSetorTab('gestor')">📊 Gestor</button>
+      <button class="htog-btn" id="resumo-tab-aux" onclick="resumoSetorTab('auxiliares')">👥 Auxiliares</button>
+    </div>
+    <div id="resumo-gestor-area">
+      <div id="resumo-setor-grid" class="indicadores-grid"></div>
+      <div class="total-bonif" style="margin-top:14px">
+        <span class="label">💰 Total Bonificação Gestor</span>
+        <span class="valor" id="resumo-setor-total-val"></span>
+      </div>
+    </div>
+    <div id="resumo-aux-area" style="display:none">
+      <div id="resumo-aux-sel-wrap" style="margin-bottom:12px"></div>
+      <div id="resumo-aux-loading" class="loading" style="display:none"><div class="spinner"></div></div>
+      <div id="resumo-aux-grid" class="indicadores-grid"></div>
+      <div class="total-bonif" id="resumo-aux-total-wrap" style="margin-top:14px;display:none">
+        <span class="label">💰 Bonificação Auxiliar</span>
+        <span class="valor" id="resumo-aux-total-val"></span>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="fecharModais()" style="flex:1">Fechar</button>
@@ -1792,14 +1807,79 @@ window.atualizarGeral = async () => {
 };
 
 // Resumo completo de um setor (todos os indicadores, valores e bonificação) ao clicar no card de Status dos Setores
+let resumoSetorKey = null;
 window.abrirResumoSetor = (key) => {
   const cache = geralSetorCache[key]; const s = SD[key];
   if(!cache || !s) return;
+  resumoSetorKey = key;
   document.getElementById('resumo-setor-titulo').innerHTML = `${s.icon} ${s.nome} — Resumo`;
   document.getElementById('resumo-setor-sub').textContent = `Responsável: ${s.gestor}  ·  ${MESES[cache.mes-1]}/${cache.ano}`;
   document.getElementById('resumo-setor-grid').innerHTML = renderCards(cache.t, s.mG);
   document.getElementById('resumo-setor-total-val').textContent = fmtBonif(cache.bG);
+  window.resumoSetorTab('gestor');
   document.getElementById('modal-resumo-setor').classList.add('open');
+};
+window.resumoSetorTab = (tab) => {
+  document.getElementById('resumo-tab-gestor').classList.toggle('active', tab==='gestor');
+  document.getElementById('resumo-tab-aux').classList.toggle('active', tab==='auxiliares');
+  document.getElementById('resumo-gestor-area').style.display = tab==='gestor' ? 'block' : 'none';
+  document.getElementById('resumo-aux-area').style.display = tab==='auxiliares' ? 'block' : 'none';
+  if(tab==='auxiliares') carregarResumoAuxSel();
+};
+// Metas do auxiliar de um setor, sem depender do estado global MA (a Gestão Geral não está "logada" em nenhum setor)
+async function metasAuxiliarSetorGeral(s, nome) {
+  if(s.gruposAux){
+    const g = (s.colabGrupos && s.colabGrupos[nome]) || Object.keys(s.gruposAux)[0];
+    return JSON.parse(JSON.stringify(s.gruposAux[g].mA || {}));
+  }
+  const mA = JSON.parse(JSON.stringify(s.mA || {}));
+  try{
+    const snap = await getDoc(doc(db,'config',s.cfgMetasA));
+    if(snap.exists()) Object.keys(snap.data()).forEach(k=>{ if(mA[k]) Object.assign(mA[k], snap.data()[k]); });
+  }catch(e){}
+  return mA;
+}
+async function carregarResumoAuxSel() {
+  const key = resumoSetorKey; const s = SD[key]; const cache = geralSetorCache[key];
+  const wrap = document.getElementById('resumo-aux-sel-wrap');
+  if(!s.temMultiplosAux){
+    wrap.innerHTML = '';
+    await renderResumoAuxDados(key, null);
+    return;
+  }
+  let colabs = [];
+  try{ const snap = await getDoc(doc(db,'config',s.cfgColabs)); colabs = snap.exists() ? (snap.data().lista||[]) : (s.colabsDefault||[]); }
+  catch(e){ colabs = s.colabsDefault || []; }
+  if(!colabs.length){
+    wrap.innerHTML = '';
+    document.getElementById('resumo-aux-grid').innerHTML = '<p style="font-size:.8rem;color:var(--muted)">Nenhum auxiliar cadastrado neste setor.</p>';
+    document.getElementById('resumo-aux-total-wrap').style.display = 'none';
+    return;
+  }
+  wrap.innerHTML = `<select id="resumo-aux-sel" onchange="renderResumoAuxDados('${key}',this.value)" style="padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:.85rem;outline:none;width:100%;max-width:280px">
+    ${colabs.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`).join('')}
+  </select>`;
+  await renderResumoAuxDados(key, colabs[0]);
+}
+window.renderResumoAuxDados = async (key, nome) => {
+  const s = SD[key]; const cache = geralSetorCache[key]; if(!cache) return;
+  const loading = document.getElementById('resumo-aux-loading'); const grid = document.getElementById('resumo-aux-grid');
+  loading.style.display = 'block'; grid.innerHTML = '';
+  try{
+    const mAc = await metasAuxiliarSetorGeral(s, nome);
+    let q = query(collection(db,s.colA), where('mes','==',cache.mes), where('ano','==',cache.ano));
+    if(nome) q = query(collection(db,s.colA), where('mes','==',cache.mes), where('ano','==',cache.ano), where('colaborador','==',nome));
+    const snap = await getDocs(q);
+    const t = agregarMes(snap.docs.map(d=>d.data()), mAc);
+    const bonif = calcTotal(t, mAc);
+    grid.innerHTML = renderCards(t, mAc);
+    document.getElementById('resumo-aux-total-wrap').style.display = 'flex';
+    document.getElementById('resumo-aux-total-val').textContent = fmtBonif(bonif);
+  }catch(e){
+    grid.innerHTML = '<p style="font-size:.8rem;color:var(--danger)">Erro ao carregar dados do auxiliar.</p>';
+  }finally{
+    loading.style.display = 'none';
+  }
 };
 
 function renderCfgNomesSetores() {
