@@ -350,6 +350,32 @@
   </div>
 </div>
 
+<div class="modal-bg" id="modal-periodo-pdf">
+  <div class="modal" style="max-width:340px">
+    <h3>📄 Período do Relatório</h3>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px">Escolha o período que deseja incluir no PDF. O relatório compara automaticamente com os 2 períodos anteriores de mesma duração.</p>
+    <div class="form-group">
+      <label>De</label>
+      <div class="mes-sel">
+        <select id="pdf-mes-ini"></select>
+        <input type="number" id="pdf-ano-ini" min="2024" max="2030" style="width:70px">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Até</label>
+      <div class="mes-sel">
+        <select id="pdf-mes-fim"></select>
+        <input type="number" id="pdf-ano-fim" min="2024" max="2030" style="width:70px">
+      </div>
+    </div>
+    <div style="color:var(--danger);font-size:.75rem;min-height:16px" id="pdf-periodo-err"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModais()">Cancelar</button>
+      <button class="btn-gold-sm" id="btn-confirmar-periodo-pdf" style="flex:1;padding:10px" onclick="confirmarPeriodoPDF()">📄 Gerar PDF</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modal-resumo-setor">
   <div class="modal" style="max-width:720px">
     <h3 id="resumo-setor-titulo">Resumo do Setor</h3>
@@ -666,6 +692,7 @@ function metasColab(s, nome){
 let colabsEdit = [];
 let navAtivo = null;
 let geralSetorCache = {}; // key do setor -> {t, bG, mes, ano} (populado por atualizarGeral, usado pelo resumo do setor)
+let pdfPeriodoAlvo = null; // {tipo:'gestor'|'auxiliares', key} — guarda qual relatório abrir após escolher o período no modal
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 // ══ UTILS ══
@@ -890,7 +917,7 @@ async function selecionarColaborador(key) {
       <div class="portal-header"><h2>${s.icon} ${s.nome} — Auxiliar</h2><p>Selecione seu nome para continuar</p></div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn-sair-setor" onclick="sairSetor()">← Voltar ao login do setor</button>
-        <button class="btn-gold-sm" id="btn-relatorio-aux-pdf" onclick="gerarRelatorioAuxiliaresPDF('${key}')">📄 Gerar Relatório PDF</button>
+        <button class="btn-gold-sm" id="btn-relatorio-aux-pdf" onclick="abrirPeriodoPDF('auxiliares','${key}')">📄 Gerar Relatório PDF</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;max-width:320px">
         ${colabs.map(n=>`
@@ -977,7 +1004,7 @@ function renderSetorLogado() {
       ${isGestor?`
       <div id="tab-dash" class="tab-pane">
         <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-          <button class="btn-gold-sm" id="btn-relatorio-pdf" onclick="gerarRelatorioPDF()">📄 Gerar Relatório PDF</button>
+          <button class="btn-gold-sm" id="btn-relatorio-pdf" onclick="abrirPeriodoPDF('gestor')">📄 Gerar Relatório PDF</button>
         </div>
         <div class="dash-kpis">
           <div class="dash-kpi"><div class="dk-label">Bonif. Gestor</div><div class="dk-val" id="dk-g">—</div></div>
@@ -1178,6 +1205,64 @@ function mesAnteriorN(mes, ano, n) {
   while(m<=0){ m+=12; a--; }
   return {mes:m, ano:a};
 }
+// Lista de {mes,ano} do período selecionado no relatório, do mais antigo pro mais novo (cap de segurança em 36 meses)
+function periodosEntre(mesIni,anoIni,mesFim,anoFim) {
+  const arr=[]; let m=mesIni, a=anoIni, guard=0;
+  while((a<anoFim || (a===anoFim && m<=mesFim)) && guard<36) {
+    arr.push({mes:m, ano:a}); m++; if(m>12){ m=1; a++; } guard++;
+  }
+  return arr;
+}
+// Período imediatamente anterior, com a mesma duração (em meses) do período informado
+function periodoAnterior(periodo) {
+  const n = periodo.length; const primeiro = periodo[0];
+  const fimAnt = mesAnteriorN(primeiro.mes, primeiro.ano, 1);
+  const iniAnt = mesAnteriorN(primeiro.mes, primeiro.ano, n);
+  return periodosEntre(iniAnt.mes, iniAnt.ano, fimAnt.mes, fimAnt.ano);
+}
+function mesLabelPeriodo(periodo) {
+  if(periodo.length<=1) { const p=periodo[0]; return `${MESES[p.mes-1].slice(0,3)}/${p.ano}`; }
+  const ini=periodo[0], fim=periodo[periodo.length-1];
+  return `${MESES[ini.mes-1].slice(0,3)}/${ini.ano}-${MESES[fim.mes-1].slice(0,3)}/${fim.ano}`;
+}
+// Busca e junta os documentos de todos os meses do período (uma query por mês, em paralelo)
+async function docsDoPeriodo(col, periodo, colaborador) {
+  const arrs = await Promise.all(periodo.map(p=>{
+    const wheres=[where('mes','==',p.mes), where('ano','==',p.ano)];
+    if(colaborador) wheres.push(where('colaborador','==',colaborador));
+    return getDocs(query(collection(db,col), ...wheres));
+  }));
+  return arrs.flatMap(snap=>snap.docs.map(d=>d.data()));
+}
+window.abrirPeriodoPDF = (tipo, key) => {
+  pdfPeriodoAlvo = { tipo, key };
+  const opts = MESES.map((m,i)=>`<option value="${i+1}">${m.slice(0,3)}</option>`).join('');
+  document.getElementById('pdf-mes-ini').innerHTML = opts;
+  document.getElementById('pdf-mes-fim').innerHTML = opts;
+  const hoje = new Date();
+  const selMes = document.getElementById('s-mes'), selAno = document.getElementById('s-ano');
+  const mesFim = selMes ? parseInt(selMes.value) : hoje.getMonth()+1;
+  const anoFim = selAno ? parseInt(selAno.value) : hoje.getFullYear();
+  const ini = tipo==='gestor' ? mesAnteriorN(mesFim,anoFim,2) : {mes:mesFim,ano:anoFim};
+  document.getElementById('pdf-mes-ini').value = ini.mes;
+  document.getElementById('pdf-ano-ini').value = ini.ano;
+  document.getElementById('pdf-mes-fim').value = mesFim;
+  document.getElementById('pdf-ano-fim').value = anoFim;
+  document.getElementById('pdf-periodo-err').textContent = '';
+  document.getElementById('modal-periodo-pdf').classList.add('open');
+};
+window.confirmarPeriodoPDF = () => {
+  const mesIni=parseInt(document.getElementById('pdf-mes-ini').value);
+  const anoIni=parseInt(document.getElementById('pdf-ano-ini').value);
+  const mesFim=parseInt(document.getElementById('pdf-mes-fim').value);
+  const anoFim=parseInt(document.getElementById('pdf-ano-fim').value);
+  const erroEl = document.getElementById('pdf-periodo-err');
+  if(anoIni>anoFim || (anoIni===anoFim && mesIni>mesFim)) { erroEl.textContent='⚠️ O início deve vir antes do fim.'; return; }
+  if(periodosEntre(mesIni,anoIni,mesFim,anoFim).length>36) { erroEl.textContent='⚠️ Período muito longo (máx. 36 meses).'; return; }
+  fecharModais();
+  if(pdfPeriodoAlvo?.tipo==='auxiliares') gerarRelatorioAuxiliaresPDF(pdfPeriodoAlvo.key, mesIni,anoIni,mesFim,anoFim);
+  else gerarRelatorioPDF(mesIni,anoIni,mesFim,anoFim);
+};
 // Paleta usada no relatório (RGB) — só ASCII/Latin-1 é usado no texto do PDF,
 // já que a fonte padrão do jsPDF corrompe símbolos como ≥ ≤ ↑ ↓ → ⚠.
 const PDF_COR = {
@@ -1267,10 +1352,11 @@ function pdfDesenharGraficoAuxiliares(docPdf, x, y, w, ordenados) {
     docPdf.text(lbl, x+i*groupW+groupW/2, baseY+3, { angle:60, align:'right' });
   });
 }
-window.gerarRelatorioAuxiliaresPDF = async (key) => {
+window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) => {
   const btn = document.getElementById('btn-relatorio-aux-pdf');
   const s = SD[key];
-  const hoje = new Date(); const mes = hoje.getMonth()+1; const ano = hoje.getFullYear();
+  const hoje = new Date();
+  const periodo = (mesIni&&anoIni&&mesFim&&anoFim) ? periodosEntre(mesIni,anoIni,mesFim,anoFim) : [{mes:hoje.getMonth()+1, ano:hoje.getFullYear()}];
   if(btn){ btn.disabled=true; btn.textContent='Gerando...'; }
   try{
     const [{ jsPDF }, autoTableMod] = await Promise.all([
@@ -1287,9 +1373,8 @@ window.gerarRelatorioAuxiliaresPDF = async (key) => {
     const rankNv = {'Fora':0,'Bronze':1,'Prata':2,'Ouro':3};
     const dadosColabs = await Promise.all(colabs.map(async nome=>{
       const mAc = metasColab(s, nome);
-      const q = query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',nome));
-      const snap = await getDocs(q);
-      const t = agregarMes(snap.docs.map(d=>d.data()), mAc);
+      const docs = await docsDoPeriodo(s.colA, periodo, nome);
+      const t = agregarMes(docs, mAc);
       const bonif = calcTotal(t, mAc);
       const niveis = Object.keys(mAc).map(k=>avaliar(k,t[k],mAc));
       const validos = niveis.filter(n=>n!=='sem-dado');
@@ -1308,14 +1393,14 @@ window.gerarRelatorioAuxiliaresPDF = async (key) => {
 
     const docPdf = new jsPDF();
     const PW=210, MARGEM=14, USAVEL=PW-MARGEM*2;
-    const mesLbl = `${MESES[mes-1]}/${ano}`;
+    const mesLbl = mesLabelPeriodo(periodo);
 
     docPdf.setFillColor(...PDF_COR.gold);
     docPdf.rect(0, 0, PW, 24, 'F');
     docPdf.setFontSize(16); docPdf.setTextColor(255,255,255);
     docPdf.text(`${s.nome} - Relatorio de Auxiliares`, MARGEM, 15);
     docPdf.setFontSize(9); docPdf.setTextColor(255,255,255);
-    docPdf.text(`Mes vigente: ${mesLbl}  |  ${colabs.length} auxiliares  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
+    docPdf.text(`Periodo: ${mesLbl}  |  ${colabs.length} auxiliares  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
 
     let y = 34;
     const temGrupos = !!s.gruposAux;
@@ -1355,7 +1440,7 @@ window.gerarRelatorioAuxiliaresPDF = async (key) => {
     docPdf.setFont(undefined,'normal');
     docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark);
     if(!precisamAtencao.length){
-      docPdf.text('Nenhum auxiliar com desempenho critico neste mes.', MARGEM+4, y);
+      docPdf.text('Nenhum auxiliar com desempenho critico neste periodo.', MARGEM+4, y);
       y += 8;
     } else {
       precisamAtencao.forEach(c=>{
@@ -1379,7 +1464,7 @@ window.gerarRelatorioAuxiliaresPDF = async (key) => {
       docPdf.text(`Gestao KPI - ${s.nome} (Auxiliares)  |  Pagina ${p}/${totalPaginas}`, MARGEM, 291);
     }
 
-    docPdf.save(`relatorio_auxiliares_${s.nome.replace(/[^a-zA-Z0-9]+/g,'_')}_${mesLbl.replace('/','_')}.pdf`);
+    docPdf.save(`relatorio_auxiliares_${s.nome.replace(/[^a-zA-Z0-9]+/g,'_')}_${mesLbl.replace(/[\/\-]/g,'_')}.pdf`);
     toast('✅ Relatório PDF gerado!');
   }catch(e){
     toast('❌ Erro ao gerar relatório');
@@ -1387,12 +1472,15 @@ window.gerarRelatorioAuxiliaresPDF = async (key) => {
     if(btn){ btn.disabled=false; btn.textContent='📄 Gerar Relatório PDF'; }
   }
 };
-window.gerarRelatorioPDF = async () => {
+window.gerarRelatorioPDF = async (mesIni,anoIni,mesFim,anoFim) => {
   const btn=document.getElementById('btn-relatorio-pdf');
   const s=SD[setorLogado];
-  const mes=parseInt(document.getElementById('s-mes').value);
-  const ano=parseInt(document.getElementById('s-ano').value);
-  const periodos=[{mes,ano}, mesAnteriorN(mes,ano,1), mesAnteriorN(mes,ano,2)];
+  let periodoSel;
+  if(mesIni&&anoIni&&mesFim&&anoFim){ periodoSel = periodosEntre(mesIni,anoIni,mesFim,anoFim); }
+  else { const mes=parseInt(document.getElementById('s-mes').value); const ano=parseInt(document.getElementById('s-ano').value); periodoSel=[{mes,ano}]; }
+  const periodoAnt1 = periodoAnterior(periodoSel);
+  const periodoAnt2 = periodoAnterior(periodoAnt1);
+  const periodos=[periodoSel, periodoAnt1, periodoAnt2];
   if(btn){ btn.disabled=true; btn.textContent='Gerando...'; }
   try{
     const [{ jsPDF }, autoTableMod] = await Promise.all([
@@ -1400,13 +1488,13 @@ window.gerarRelatorioPDF = async () => {
       import('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/+esm'),
     ]);
     autoTableMod.applyPlugin(jsPDF);
-    const dadosPorMes = await Promise.all(periodos.map(async p=>{
-      const snap = await getDocs(query(collection(db,s.colG),where('mes','==',p.mes),where('ano','==',p.ano)));
-      const t = agregarMes(snap.docs.map(d=>d.data()), MG);
-      return { ...p, t, bonif: calcTotal(t, MG) };
+    const dadosPorMes = await Promise.all(periodos.map(async per=>{
+      const docs = await docsDoPeriodo(s.colG, per);
+      const t = agregarMes(docs, MG);
+      return { per, t, bonif: calcTotal(t, MG) };
     }));
     const [atual, ant1, ant2] = dadosPorMes;
-    const mesLabel = p => `${MESES[p.mes-1].slice(0,3)}/${p.ano}`;
+    const mesLabel = d => mesLabelPeriodo(d.per);
     const rankNv = {'Fora':0,'Bronze':1,'Prata':2,'Ouro':3};
 
     const keys = Object.keys(MG);
@@ -1424,7 +1512,7 @@ window.gerarRelatorioPDF = async () => {
     docPdf.setFontSize(16); docPdf.setTextColor(255,255,255);
     docPdf.text(`${s.nome} - Relatorio de Desempenho`, MARGEM, 15);
     docPdf.setFontSize(9); docPdf.setTextColor(255,255,255);
-    docPdf.text(`Gestor: ${s.gestor}  |  Mes vigente: ${mesLabel(atual)}  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
+    docPdf.text(`Gestor: ${s.gestor}  |  Periodo: ${mesLabel(atual)}  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
 
     docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.gray);
     docPdf.text(`Comparacao com: ${mesLabel(ant1)} e ${mesLabel(ant2)}`, MARGEM, 32);
@@ -1500,7 +1588,7 @@ window.gerarRelatorioPDF = async () => {
     docPdf.setFont(undefined,'normal');
     docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark);
     if(!atencao.length){
-      docPdf.text('Nenhum indicador critico neste mes - bom trabalho!', MARGEM+4, y);
+      docPdf.text('Nenhum indicador critico neste periodo - bom trabalho!', MARGEM+4, y);
       y += 8;
     } else {
       atencao.forEach(k=>{
@@ -1527,7 +1615,7 @@ window.gerarRelatorioPDF = async () => {
       docPdf.text(`Gestao KPI - ${s.nome}  |  Pagina ${p}/${totalPaginas}`, MARGEM, 291);
     }
 
-    docPdf.save(`relatorio_${s.nome.replace(/[^a-zA-Z0-9]+/g,'_')}_${mesLabel(atual).replace('/','_')}.pdf`);
+    docPdf.save(`relatorio_${s.nome.replace(/[^a-zA-Z0-9]+/g,'_')}_${mesLabel(atual).replace(/[\/\-]/g,'_')}.pdf`);
     toast('✅ Relatório PDF gerado!');
   }catch(e){
     toast('❌ Erro ao gerar relatório');
