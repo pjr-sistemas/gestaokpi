@@ -353,7 +353,7 @@
 <div class="modal-bg" id="modal-periodo-pdf">
   <div class="modal" style="max-width:340px">
     <h3>📄 Período do Relatório</h3>
-    <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px">Escolha o período que deseja incluir no PDF. O relatório compara automaticamente com os 2 períodos anteriores de mesma duração.</p>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px" id="pdf-periodo-desc">Escolha o período que deseja incluir no PDF.</p>
     <div class="form-group">
       <label>De</label>
       <div class="mes-sel">
@@ -1248,6 +1248,9 @@ window.abrirPeriodoPDF = (tipo, key) => {
   document.getElementById('pdf-ano-ini').value = ini.ano;
   document.getElementById('pdf-mes-fim').value = mesFim;
   document.getElementById('pdf-ano-fim').value = anoFim;
+  document.getElementById('pdf-periodo-desc').textContent = tipo==='gestor'
+    ? 'Escolha o período que deseja incluir no PDF. O relatório compara automaticamente com os 2 períodos anteriores de mesma duração.'
+    : 'Escolha o período que deseja incluir no PDF. Os lançamentos de todos os meses do período são somados/agregados para o ranking.';
   document.getElementById('pdf-periodo-err').textContent = '';
   document.getElementById('modal-periodo-pdf').classList.add('open');
 };
