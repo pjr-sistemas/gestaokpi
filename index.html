@@ -376,6 +376,36 @@
   </div>
 </div>
 
+<div class="modal-bg" id="modal-relatorio-geral">
+  <div class="modal" style="max-width:400px">
+    <h3>📄 Relatório Geral em PDF</h3>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px">Escolha o período e os setores (gestores) a incluir no relatório.</p>
+    <div class="form-group">
+      <label>De</label>
+      <div class="mes-sel">
+        <select id="rg-mes-ini"></select>
+        <input type="number" id="rg-ano-ini" min="2024" max="2030" style="width:70px">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Até</label>
+      <div class="mes-sel">
+        <select id="rg-mes-fim"></select>
+        <input type="number" id="rg-ano-fim" min="2024" max="2030" style="width:70px">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Setores <a href="#" onclick="rgMarcarTodos(true);return false" style="color:var(--gold)">Todos</a> · <a href="#" onclick="rgMarcarTodos(false);return false" style="color:var(--gold)">Nenhum</a></label>
+      <div id="rg-setores-list" style="max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--card2)"></div>
+    </div>
+    <div style="color:var(--danger);font-size:.75rem;min-height:16px" id="rg-err"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModais()">Cancelar</button>
+      <button class="btn-gold-sm" style="flex:1;padding:10px" onclick="confirmarRelatorioGeral()">📄 Gerar PDF</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modal-resumo-setor">
   <div class="modal" style="max-width:720px">
     <h3 id="resumo-setor-titulo">Resumo do Setor</h3>
@@ -1849,6 +1879,7 @@ function renderGeralLogado() {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
         <div><h2 style="color:var(--gold);font-size:1.1rem">👑 ${supervisorSetores?`${supervisorNome} — Acompanhamento`:'Gestão Geral — Visão Consolidada'}</h2><p style="font-size:.78rem;color:var(--muted)">${supervisorSetores?supervisorSetores.map(k=>SD[k].nome).join(' · '):'Todos os setores'} · ${MESES[mes-1]} ${ano}</p></div>
         <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-gold-sm" onclick="abrirRelatorioGeral()">📄 Relatório PDF</button>
           <select id="geral-mes" onchange="atualizarGeral()">${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m,i)=>`<option value="${i+1}"${i+1===mes?' selected':''}>${m}</option>`).join('')}</select>
           <input type="number" id="geral-ano" value="${ano}" min="2024" max="2030" onchange="atualizarGeral()" style="width:65px;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text)">
         </div>
@@ -1978,6 +2009,15 @@ async function metasAuxiliarSetorGeral(s, nome) {
   }catch(e){}
   return mA;
 }
+// Metas do gestor de um setor, com override de config (mesma logica de metasAuxiliarSetorGeral, mas para o gestor)
+async function metasGestorSetorGeral(s) {
+  const mG = JSON.parse(JSON.stringify(s.mG || {}));
+  try{
+    const snap = await getDoc(doc(db,'config',s.cfgMetasG));
+    if(snap.exists()) Object.keys(snap.data()).forEach(k=>{ if(mG[k]) Object.assign(mG[k], snap.data()[k]); });
+  }catch(e){}
+  return mG;
+}
 async function carregarResumoAuxSel() {
   const key = resumoSetorKey; const s = SD[key]; const cache = geralSetorCache[key];
   const wrap = document.getElementById('resumo-aux-sel-wrap');
@@ -2018,6 +2058,138 @@ window.renderResumoAuxDados = async (key, nome) => {
     grid.innerHTML = '<p style="font-size:.8rem;color:var(--danger)">Erro ao carregar dados do auxiliar.</p>';
   }finally{
     loading.style.display = 'none';
+  }
+};
+
+// ── Relatório Geral em PDF (Gestão Geral): varios setores + periodo escolhido, com valor (R$) por indicador ──
+window.abrirRelatorioGeral = () => {
+  const opts = MESES.map((m,i)=>`<option value="${i+1}">${m.slice(0,3)}</option>`).join('');
+  document.getElementById('rg-mes-ini').innerHTML = opts;
+  document.getElementById('rg-mes-fim').innerHTML = opts;
+  const mesFim = parseInt(document.getElementById('geral-mes').value);
+  const anoFim = parseInt(document.getElementById('geral-ano').value);
+  document.getElementById('rg-mes-ini').value = mesFim;
+  document.getElementById('rg-ano-ini').value = anoFim;
+  document.getElementById('rg-mes-fim').value = mesFim;
+  document.getElementById('rg-ano-fim').value = anoFim;
+  const setoresAtivos = Object.entries(SD).filter(([key,s])=>s.status==='ativo'&&(!supervisorSetores||supervisorSetores.includes(key)));
+  document.getElementById('rg-setores-list').innerHTML = setoresAtivos.map(([key,s])=>`
+    <label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.82rem;cursor:pointer">
+      <input type="checkbox" class="rg-setor-chk" value="${key}" checked style="width:15px;height:15px">
+      ${s.icon} ${s.nome}
+    </label>`).join('');
+  document.getElementById('rg-err').textContent = '';
+  document.getElementById('modal-relatorio-geral').classList.add('open');
+};
+window.rgMarcarTodos = (val) => {
+  document.querySelectorAll('.rg-setor-chk').forEach(c=>c.checked=val);
+};
+window.confirmarRelatorioGeral = () => {
+  const mesIni=parseInt(document.getElementById('rg-mes-ini').value);
+  const anoIni=parseInt(document.getElementById('rg-ano-ini').value);
+  const mesFim=parseInt(document.getElementById('rg-mes-fim').value);
+  const anoFim=parseInt(document.getElementById('rg-ano-fim').value);
+  const err = document.getElementById('rg-err');
+  if(anoIni>anoFim || (anoIni===anoFim && mesIni>mesFim)) { err.textContent='⚠️ O início deve vir antes do fim.'; return; }
+  const periodo = periodosEntre(mesIni,anoIni,mesFim,anoFim);
+  if(periodo.length>36) { err.textContent='⚠️ Período muito longo (máx. 36 meses).'; return; }
+  const keys = Array.from(document.querySelectorAll('.rg-setor-chk:checked')).map(c=>c.value);
+  if(!keys.length) { err.textContent='⚠️ Selecione ao menos um setor.'; return; }
+  fecharModais();
+  gerarRelatorioGeralPDF(keys, periodo);
+};
+window.gerarRelatorioGeralPDF = async (keys, periodo) => {
+  toast('Gerando relatório...');
+  try{
+    const [{ jsPDF }, autoTableMod] = await Promise.all([
+      import('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/+esm'),
+      import('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/+esm'),
+    ]);
+    autoTableMod.applyPlugin(jsPDF);
+
+    const mesLbl = mesLabelPeriodo(periodo);
+    const pdfMoeda = v => adminUnlocked ? `R$ ${v.toFixed(2).replace('.',',')}` : 'bloqueado';
+    const pdfVal = (v,u) => fmtVal(v,u).replace(/—/g,'-');
+    const pdfLabel = lbl => lbl.length>38 ? lbl.slice(0,37)+'.' : lbl;
+
+    const dadosSetores = await Promise.all(keys.map(async key=>{
+      const s = SD[key];
+      const mG = await metasGestorSetorGeral(s);
+      const docs = await docsDoPeriodo(s.colG, periodo);
+      const t = agregarMes(docs, mG);
+      const total = calcTotal(t, mG);
+      return { key, s, mG, t, total };
+    }));
+    const totalGeral = dadosSetores.reduce((a,d)=>a+d.total,0);
+
+    const docPdf = new jsPDF();
+    const PW=210, MARGEM=14, USAVEL=PW-MARGEM*2;
+    let y;
+
+    docPdf.setFillColor(...PDF_COR.gold);
+    docPdf.rect(0, 0, PW, 24, 'F');
+    docPdf.setFontSize(16); docPdf.setTextColor(255,255,255);
+    docPdf.text('Gestao KPI - Relatorio Geral', MARGEM, 15);
+    docPdf.setFontSize(9); docPdf.setTextColor(255,255,255);
+    docPdf.text(`Periodo: ${mesLbl}  |  ${dadosSetores.length} setores  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
+    y = 34;
+
+    dadosSetores.forEach(d=>{
+      const keysInd = Object.keys(d.mG);
+      const rows = keysInd.map(k=>{
+        const m = d.mG[k];
+        const nv = avaliar(k, d.t[k], d.mG);
+        const metaTxt = `${m.tipo==='maior'?'Min.':'Max.'} ${m.ouro}${m.unit} (Ouro)`;
+        const valorRs = nv==='sem-dado' ? 0 : calcBonif(nv, m.bonif);
+        return [pdfLabel(m.label), metaTxt, pdfVal(d.t[k],m.unit), nv, pdfMoeda(valorRs)];
+      });
+      const alturaEstimada = 16 + rows.length*6;
+      if(y + alturaEstimada > 280){ docPdf.addPage(); y = 20; }
+      docPdf.setFontSize(11); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+      docPdf.text(`${d.s.icon} ${d.s.nome} - Responsavel: ${d.s.gestor}`, MARGEM, y);
+      docPdf.setFont(undefined,'normal');
+      y += 6;
+      docPdf.autoTable({
+        startY: y,
+        margin: { left:MARGEM, right:MARGEM },
+        head: [['Indicador','Meta','Medido','Nivel','Valor (R$)']],
+        body: rows,
+        styles: { fontSize:7.5, cellPadding:2, valign:'middle', lineColor:[225,225,225] },
+        headStyles: { fillColor:PDF_COR.gold, textColor:[255,255,255], fontStyle:'bold' },
+        alternateRowStyles: { fillColor:[249,247,241] },
+        columnStyles: { 0:{cellWidth:56}, 1:{cellWidth:36}, 2:{cellWidth:26}, 3:{cellWidth:22}, 4:{cellWidth:'auto'} },
+        didParseCell: (data) => {
+          if(data.section==='body' && data.column.index===3){
+            const nv = rows[data.row.index][3];
+            if(nv==='Fora'){ data.cell.styles.textColor=[190,50,40]; data.cell.styles.fontStyle='bold'; }
+            else if(nv==='Bronze'){ data.cell.styles.textColor=[180,110,20]; data.cell.styles.fontStyle='bold'; }
+          }
+        },
+      });
+      y = docPdf.lastAutoTable.finalY + 3;
+      docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+      docPdf.text(`Subtotal ${d.s.nome}: ${pdfMoeda(d.total)}`, MARGEM, y);
+      docPdf.setFont(undefined,'normal');
+      y += 10;
+    });
+
+    if(y + 16 > 280){ docPdf.addPage(); y = 20; }
+    docPdf.setDrawColor(200,200,200); docPdf.line(MARGEM, y-4, PW-MARGEM, y-4);
+    docPdf.setFontSize(12); docPdf.setTextColor(...PDF_COR.gold); docPdf.setFont(undefined,'bold');
+    docPdf.text(`TOTAL GERAL (${dadosSetores.length} setores): ${pdfMoeda(totalGeral)}`, MARGEM, y+2);
+    docPdf.setFont(undefined,'normal');
+
+    const totalPaginas = docPdf.internal.getNumberOfPages();
+    for(let p=1;p<=totalPaginas;p++){
+      docPdf.setPage(p);
+      docPdf.setFontSize(7); docPdf.setTextColor(...PDF_COR.gray);
+      docPdf.text(`Gestao KPI - Relatorio Geral  |  Pagina ${p}/${totalPaginas}`, MARGEM, 291);
+    }
+
+    docPdf.save(`relatorio_geral_${mesLbl.replace(/[\/\-]/g,'_')}.pdf`);
+    toast('✅ Relatório PDF gerado!');
+  }catch(e){
+    toast('❌ Erro ao gerar relatório');
   }
 };
 
