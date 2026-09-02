@@ -1354,6 +1354,7 @@ function pdfDesenharGraficoAuxiliares(docPdf, x, y, w, ordenados) {
     const lbl = c.nome.length>14 ? c.nome.slice(0,13)+'.' : c.nome;
     docPdf.text(lbl, x+i*groupW+groupW/2, baseY+3, { angle:60, align:'right' });
   });
+  return baseY + 14;
 }
 window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) => {
   const btn = document.getElementById('btn-relatorio-aux-pdf');
@@ -1384,7 +1385,7 @@ window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) =>
       const scoreMedio = validos.length ? validos.reduce((a,n)=>a+rankNv[n],0)/validos.length : null;
       const grupo = (s.gruposAux && s.colabGrupos) ? (s.gruposAux[s.colabGrupos[nome]]?.nome||'') : '';
       const cnt = nv => niveis.filter(x=>x===nv).length;
-      return { nome, grupo, bonif, scoreMedio, ouro:cnt('Ouro'), prata:cnt('Prata'), bronze:cnt('Bronze'), fora:cnt('Fora') };
+      return { nome, grupo, bonif, scoreMedio, ouro:cnt('Ouro'), prata:cnt('Prata'), bronze:cnt('Bronze'), fora:cnt('Fora'), t, mAc };
     }));
 
     const ordenados = [...dadosColabs].sort((a,b)=>{
@@ -1408,6 +1409,8 @@ window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) =>
     let y = 34;
     const temGrupos = !!s.gruposAux;
     const pdfVal2 = v => v===null||v===undefined ? 'N/D' : v.toFixed(1);
+    const pdfVal = (v,u) => fmtVal(v,u).replace(/—/g,'-');
+    const pdfLabel = lbl => lbl.length>42 ? lbl.slice(0,41)+'.' : lbl;
     const head = temGrupos ? [['#','Auxiliar','Grupo','Ouro','Prata','Bronze','Fora','Score (0-3)']] : [['#','Auxiliar','Ouro','Prata','Bronze','Fora','Score (0-3)']];
     const rows = ordenados.map((c,i)=>{
       const base = [String(i+1), c.nome];
@@ -1458,7 +1461,47 @@ window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) =>
     docPdf.text('Comparativo entre Auxiliares (desempenho medio, do melhor pro pior)', MARGEM, y);
     docPdf.setFont(undefined,'normal');
     y += 10;
-    pdfDesenharGraficoAuxiliares(docPdf, MARGEM+8, y, USAVEL-8, ordenados);
+    y = pdfDesenharGraficoAuxiliares(docPdf, MARGEM+8, y, USAVEL-8, ordenados);
+
+    // ── Detalhamento por indicador de cada auxiliar ──
+    if(y + 16 > 280){ docPdf.addPage(); y = 20; }
+    docPdf.setFontSize(11); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+    docPdf.text('Detalhamento por Auxiliar', MARGEM, y);
+    docPdf.setFont(undefined,'normal');
+    y += 8;
+    ordenados.forEach(c=>{
+      const keysC = Object.keys(c.mAc);
+      const rowsC = keysC.map(k=>{
+        const m = c.mAc[k];
+        const nv = avaliar(k, c.t[k], c.mAc);
+        const metaTxt = `${m.tipo==='maior'?'Min.':'Max.'} ${m.ouro}${m.unit} (Ouro)`;
+        return [pdfLabel(m.label), metaTxt, pdfVal(c.t[k],m.unit), nv];
+      });
+      const alturaEstimada = 14 + rowsC.length*6;
+      if(y + alturaEstimada > 280){ docPdf.addPage(); y = 20; }
+      docPdf.setFontSize(10.5); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+      docPdf.text(`${c.nome}${c.grupo?` (${c.grupo})`:''} - Score ${pdfVal2(c.scoreMedio)}/3`, MARGEM, y);
+      docPdf.setFont(undefined,'normal');
+      y += 5;
+      docPdf.autoTable({
+        startY: y,
+        margin: { left:MARGEM, right:MARGEM },
+        head: [['Indicador','Meta','Valor','Nivel']],
+        body: rowsC,
+        styles: { fontSize:7.5, cellPadding:2, valign:'middle', lineColor:[225,225,225] },
+        headStyles: { fillColor:[110,110,110], textColor:[255,255,255], fontStyle:'bold' },
+        alternateRowStyles: { fillColor:[249,247,241] },
+        columnStyles: { 0:{cellWidth:70}, 1:{cellWidth:42}, 2:{cellWidth:32}, 3:{cellWidth:'auto'} },
+        didParseCell: (data) => {
+          if(data.section==='body' && data.column.index===3){
+            const nv = rowsC[data.row.index][3];
+            if(nv==='Fora'){ data.cell.styles.textColor=[190,50,40]; data.cell.styles.fontStyle='bold'; }
+            else if(nv==='Bronze'){ data.cell.styles.textColor=[180,110,20]; data.cell.styles.fontStyle='bold'; }
+          }
+        },
+      });
+      y = docPdf.lastAutoTable.finalY + 8;
+    });
 
     const totalPaginas = docPdf.internal.getNumberOfPages();
     for(let p=1;p<=totalPaginas;p++){
