@@ -1638,10 +1638,15 @@ window.abrirModal = () => {
 window.salvarLancamento = async () => {
   const s=SD[setorLogado]; const metas=roleLogado==='gestor'?MG:MA;
   const col=roleLogado==='gestor'?s.colG:s.colA;
+  const dataStr=document.getElementById('lancar-data').value;
+  if(!dataStr){ toast('⚠️ Escolha uma data'); return; }
+  // mes/ano vêm da data escolhida no calendário (formato YYYY-MM-DD), não do seletor de mês da tela —
+  // caso contrário um lançamento retroativo (ex: dia 31/08 visualizando setembro) ia parar no mês errado.
+  const [anoStr,mesStr]=dataStr.split('-');
   const data={
-    data:document.getElementById('lancar-data').value,
-    mes:parseInt(document.getElementById('s-mes').value),
-    ano:parseInt(document.getElementById('s-ano').value),
+    data:dataStr,
+    mes:parseInt(mesStr),
+    ano:parseInt(anoStr),
   };
   if(roleLogado==='auxiliar'&&colaborador) data.colaborador=colaborador;
   Object.keys(metas).forEach(k=>{ const el=document.getElementById(`lc-${k}`); data[k]=el&&el.value!==''?parseFloat(el.value):null; });
