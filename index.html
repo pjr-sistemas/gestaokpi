@@ -487,7 +487,8 @@ const SD = {
     icon:'📋', nome:'Cadastro', gestor:'Adriano', status:'ativo',
     colG:'lancamentos_arthur', colA:'lancamentos_cicero',
     cfgSenhas:'senhas_cadastro', cfgColabs:'colaboradores_cadastro', cfgMetasG:'metas_gestor_cadastro', cfgMetasA:'metas_auxiliar_cadastro',
-    temMultiplosAux: false,
+    temMultiplosAux: true,
+    colabsDefault: ['Cícero'],
     mG:{
       erro_cadastro:   { label:'Erro de Cadastro (atualização/digitação)', tipo:'menor', bronze:3,  prata:2,  ouro:0,   bonif:{bronze:0,prata:0,ouro:0}, agg:'sum', unit:'oc' },
       cadastros_realiz:{ label:'Cadastros a Fazer x Realizados',           tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
@@ -509,7 +510,8 @@ const SD = {
     icon:'📦', nome:'Almoxarifado', gestor:'Adriana', status:'ativo',
     colG:'lancamentos_adriana', colA:'lancamentos_rosangela',
     cfgSenhas:'senhas_estoque', cfgColabs:'colaboradores_estoque', cfgMetasG:'metas_gestor_estoque', cfgMetasA:'metas_auxiliar_estoque',
-    temMultiplosAux: false,
+    temMultiplosAux: true,
+    colabsDefault: ['Rosangela'],
     mG:{
       cinco_s:            { label:'5S Ambiente Operacional',      tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
       pecas_validadas:    { label:'Peças Criadas x Validadas',    tipo:'maior', bronze:90, prata:95, ouro:100, bonif:{bronze:0,prata:0,ouro:0}, agg:'avg', unit:'%'  },
