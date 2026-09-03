@@ -395,6 +395,13 @@
       </div>
     </div>
     <div class="form-group">
+      <label>Incluir</label>
+      <div style="display:flex;gap:18px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem"><input type="checkbox" id="rg-inc-gestores" checked style="width:15px;height:15px"> Gestores</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem"><input type="checkbox" id="rg-inc-auxiliares" style="width:15px;height:15px"> Auxiliares</label>
+      </div>
+    </div>
+    <div class="form-group">
       <label>Setores <a href="#" onclick="rgMarcarTodos(true);return false" style="color:var(--gold)">Todos</a> · <a href="#" onclick="rgMarcarTodos(false);return false" style="color:var(--gold)">Nenhum</a></label>
       <div id="rg-setores-list" style="max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--card2)"></div>
     </div>
@@ -2095,10 +2102,15 @@ window.confirmarRelatorioGeral = () => {
   if(periodo.length>36) { err.textContent='⚠️ Período muito longo (máx. 36 meses).'; return; }
   const keys = Array.from(document.querySelectorAll('.rg-setor-chk:checked')).map(c=>c.value);
   if(!keys.length) { err.textContent='⚠️ Selecione ao menos um setor.'; return; }
+  const incGestores = document.getElementById('rg-inc-gestores').checked;
+  const incAuxiliares = document.getElementById('rg-inc-auxiliares').checked;
+  if(!incGestores && !incAuxiliares) { err.textContent='⚠️ Marque Gestores, Auxiliares, ou ambos.'; return; }
   fecharModais();
-  gerarRelatorioGeralPDF(keys, periodo);
+  gerarRelatorioGeralPDF(keys, periodo, { incGestores, incAuxiliares });
 };
-window.gerarRelatorioGeralPDF = async (keys, periodo) => {
+window.gerarRelatorioGeralPDF = async (keys, periodo, opts) => {
+  const incGestores = opts?.incGestores !== false;
+  const incAuxiliares = !!opts?.incAuxiliares;
   toast('Gerando relatório...');
   try{
     const [{ jsPDF }, autoTableMod] = await Promise.all([
@@ -2111,44 +2123,18 @@ window.gerarRelatorioGeralPDF = async (keys, periodo) => {
     const pdfMoeda = v => adminUnlocked ? `R$ ${v.toFixed(2).replace('.',',')}` : 'bloqueado';
     const pdfVal = (v,u) => fmtVal(v,u).replace(/—/g,'-');
     const pdfLabel = lbl => lbl.length>38 ? lbl.slice(0,37)+'.' : lbl;
-
-    const dadosSetores = await Promise.all(keys.map(async key=>{
-      const s = SD[key];
-      const mG = await metasGestorSetorGeral(s);
-      const docs = await docsDoPeriodo(s.colG, periodo);
-      const t = agregarMes(docs, mG);
-      const total = calcTotal(t, mG);
-      return { key, s, mG, t, total };
-    }));
-    const totalGeral = dadosSetores.reduce((a,d)=>a+d.total,0);
-
-    const docPdf = new jsPDF();
-    const PW=210, MARGEM=14, USAVEL=PW-MARGEM*2;
-    let y;
-
-    docPdf.setFillColor(...PDF_COR.gold);
-    docPdf.rect(0, 0, PW, 24, 'F');
-    docPdf.setFontSize(16); docPdf.setTextColor(255,255,255);
-    docPdf.text('Gestao KPI - Relatorio Geral', MARGEM, 15);
-    docPdf.setFontSize(9); docPdf.setTextColor(255,255,255);
-    docPdf.text(`Periodo: ${mesLbl}  |  ${dadosSetores.length} setores  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
-    y = 34;
-
-    dadosSetores.forEach(d=>{
-      const keysInd = Object.keys(d.mG);
+    // Desenha uma tabela Indicador/Meta/Medido/Nivel/Valor(R$) a partir de um total agregado (t) + metas (m); retorna {y, total}
+    const desenharTabelaIndicadores = (docPdf, y, t, m) => {
+      const keysInd = Object.keys(m);
       const rows = keysInd.map(k=>{
-        const m = d.mG[k];
-        const nv = avaliar(k, d.t[k], d.mG);
-        const metaTxt = `${m.tipo==='maior'?'Min.':'Max.'} ${m.ouro}${m.unit} (Ouro)`;
-        const valorRs = nv==='sem-dado' ? 0 : calcBonif(nv, m.bonif);
-        return [pdfLabel(m.label), metaTxt, pdfVal(d.t[k],m.unit), nv, pdfMoeda(valorRs)];
+        const mi = m[k];
+        const nv = avaliar(k, t[k], m);
+        const metaTxt = `${mi.tipo==='maior'?'Min.':'Max.'} ${mi.ouro}${mi.unit} (Ouro)`;
+        const valorRs = calcBonif(nv, mi.bonif);
+        return [pdfLabel(mi.label), metaTxt, pdfVal(t[k],mi.unit), nv, pdfMoeda(valorRs)];
       });
-      const alturaEstimada = 16 + rows.length*6;
+      const alturaEstimada = 10 + rows.length*6;
       if(y + alturaEstimada > 280){ docPdf.addPage(); y = 20; }
-      docPdf.setFontSize(11); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
-      docPdf.text(`${d.s.nome} - Responsavel: ${d.s.gestor}`, MARGEM, y);
-      docPdf.setFont(undefined,'normal');
-      y += 6;
       docPdf.autoTable({
         startY: y,
         margin: { left:MARGEM, right:MARGEM },
@@ -2166,17 +2152,101 @@ window.gerarRelatorioGeralPDF = async (keys, periodo) => {
           }
         },
       });
-      y = docPdf.lastAutoTable.finalY + 3;
-      docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
-      docPdf.text(`Subtotal ${d.s.nome}: ${pdfMoeda(d.total)}`, MARGEM, y);
+      return docPdf.lastAutoTable.finalY + 3;
+    };
+
+    const dadosSetores = await Promise.all(keys.map(async key=>{
+      const s = SD[key];
+      const item = { key, s };
+      if(incGestores){
+        const mG = await metasGestorSetorGeral(s);
+        const docs = await docsDoPeriodo(s.colG, periodo);
+        const t = agregarMes(docs, mG);
+        item.gestor = { mG, t, total: calcTotal(t, mG) };
+      }
+      if(incAuxiliares){
+        let colabs = [null];
+        if(s.temMultiplosAux){
+          try{ const snap = await getDoc(doc(db,'config',s.cfgColabs)); colabs = snap.exists() ? (snap.data().lista||[null]) : (s.colabsDefault||[null]); }
+          catch(e){ colabs = s.colabsDefault || [null]; }
+        }
+        const auxiliares = await Promise.all(colabs.map(async nome=>{
+          const mAc = await metasAuxiliarSetorGeral(s, nome);
+          const docs = await docsDoPeriodo(s.colA, periodo, nome);
+          const t = agregarMes(docs, mAc);
+          return { nome, mAc, t, total: calcTotal(t, mAc) };
+        }));
+        item.auxiliares = auxiliares;
+        item.totalAuxiliares = auxiliares.reduce((a,c)=>a+c.total,0);
+      }
+      return item;
+    }));
+    const totalGeralGestores = incGestores ? dadosSetores.reduce((a,d)=>a+d.gestor.total,0) : 0;
+    const totalGeralAuxiliares = incAuxiliares ? dadosSetores.reduce((a,d)=>a+d.totalAuxiliares,0) : 0;
+    const totalGeral = totalGeralGestores + totalGeralAuxiliares;
+
+    const docPdf = new jsPDF();
+    const PW=210, MARGEM=14, USAVEL=PW-MARGEM*2;
+    let y;
+
+    const tipoLbl = incGestores&&incAuxiliares ? 'Gestores e Auxiliares' : incAuxiliares ? 'Auxiliares' : 'Gestores';
+    docPdf.setFillColor(...PDF_COR.gold);
+    docPdf.rect(0, 0, PW, 24, 'F');
+    docPdf.setFontSize(16); docPdf.setTextColor(255,255,255);
+    docPdf.text('Gestao KPI - Relatorio Geral', MARGEM, 15);
+    docPdf.setFontSize(9); docPdf.setTextColor(255,255,255);
+    docPdf.text(`Periodo: ${mesLbl}  |  ${dadosSetores.length} setores  |  ${tipoLbl}  |  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, MARGEM, 21);
+    y = 34;
+
+    dadosSetores.forEach(d=>{
+      if(y + 20 > 280){ docPdf.addPage(); y = 20; }
+      docPdf.setFontSize(12); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+      docPdf.text(d.s.nome, MARGEM, y);
       docPdf.setFont(undefined,'normal');
-      y += 10;
+      y += 8;
+
+      if(incGestores){
+        docPdf.setFontSize(10); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+        docPdf.text(`Gestor - Responsavel: ${d.s.gestor}`, MARGEM, y);
+        docPdf.setFont(undefined,'normal');
+        y += 5;
+        y = desenharTabelaIndicadores(docPdf, y, d.gestor.t, d.gestor.mG);
+        docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+        docPdf.text(`Subtotal Gestor: ${pdfMoeda(d.gestor.total)}`, MARGEM, y);
+        docPdf.setFont(undefined,'normal');
+        y += 9;
+      }
+
+      if(incAuxiliares){
+        d.auxiliares.forEach(c=>{
+          if(y + 20 > 280){ docPdf.addPage(); y = 20; }
+          docPdf.setFontSize(10); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+          docPdf.text(`Auxiliar: ${c.nome||'Auxiliar'}`, MARGEM, y);
+          docPdf.setFont(undefined,'normal');
+          y += 5;
+          y = desenharTabelaIndicadores(docPdf, y, c.t, c.mAc);
+          docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+          docPdf.text(`Subtotal ${c.nome||'Auxiliar'}: ${pdfMoeda(c.total)}`, MARGEM, y);
+          docPdf.setFont(undefined,'normal');
+          y += 9;
+        });
+        docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark); docPdf.setFont(undefined,'bold');
+        docPdf.text(`Subtotal Auxiliares ${d.s.nome}: ${pdfMoeda(d.totalAuxiliares)}`, MARGEM, y);
+        docPdf.setFont(undefined,'normal');
+        y += 9;
+      }
+
+      docPdf.setDrawColor(225,225,225); docPdf.line(MARGEM, y-4, PW-MARGEM, y-4);
+      y += 4;
     });
 
-    if(y + 16 > 280){ docPdf.addPage(); y = 20; }
+    if(y + 24 > 280){ docPdf.addPage(); y = 20; }
     docPdf.setDrawColor(200,200,200); docPdf.line(MARGEM, y-4, PW-MARGEM, y-4);
+    docPdf.setFontSize(9); docPdf.setTextColor(...PDF_COR.dark);
+    if(incGestores) { docPdf.text(`Total Gestores: ${pdfMoeda(totalGeralGestores)}`, MARGEM, y+2); y += 6; }
+    if(incAuxiliares) { docPdf.text(`Total Auxiliares: ${pdfMoeda(totalGeralAuxiliares)}`, MARGEM, y+2); y += 6; }
     docPdf.setFontSize(12); docPdf.setTextColor(...PDF_COR.gold); docPdf.setFont(undefined,'bold');
-    docPdf.text(`TOTAL GERAL (${dadosSetores.length} setores): ${pdfMoeda(totalGeral)}`, MARGEM, y+2);
+    docPdf.text(`TOTAL GERAL (${dadosSetores.length} setores): ${pdfMoeda(totalGeral)}`, MARGEM, y+3);
     docPdf.setFont(undefined,'normal');
 
     const totalPaginas = docPdf.internal.getNumberOfPages();
