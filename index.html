@@ -1962,25 +1962,41 @@ window.atualizarGeral = async () => {
   const mes=parseInt(document.getElementById('geral-mes').value);
   const ano=parseInt(document.getElementById('geral-ano').value);
   const setoresAtivos=Object.entries(SD).filter(([key,s])=>s.status==='ativo'&&(!supervisorSetores||supervisorSetores.includes(key)));
-  let totalBonif=0, totalOuro=0, totalInds=0; let html='';
-  for(const [key,s] of setoresAtivos){
+  // Carrega gestor + auxiliares de cada setor em paralelo (bonif total precisa somar os dois)
+  const dados = await Promise.all(setoresAtivos.map(async ([key,s])=>{
     const snap=await getDocs(query(collection(db,s.colG),where('mes','==',mes),where('ano','==',ano)));
     const t=agregarMes(snap.docs.map(d=>d.data()),s.mG); const bG=calcTotal(t,s.mG);
-    totalBonif+=bG;
+    let colabs=[null];
+    try{ const csnap=await getDoc(doc(db,'config',s.cfgColabs)); colabs=csnap.exists()?(csnap.data().lista||[null]):(s.colabsDefault||[null]); }
+    catch(e){ colabs = s.colabsDefault||[null]; }
+    const bA = (await Promise.all(colabs.map(async nome=>{
+      const mAc = await metasAuxiliarSetorGeral(s, nome);
+      let q = query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano));
+      if(nome) q = query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',nome));
+      const asnap = await getDocs(q);
+      const at = agregarMes(asnap.docs.map(d=>d.data()), mAc);
+      return calcTotal(at, mAc);
+    }))).reduce((a,b)=>a+b,0);
+    return { key, s, t, bG, bA };
+  }));
+  let totalBonifG=0, totalBonifA=0, totalOuro=0, totalInds=0; let html='';
+  dados.forEach(({key,s,t,bG,bA})=>{
+    totalBonifG+=bG; totalBonifA+=bA;
     const ouro=Object.keys(s.mG).filter(k=>avaliar(k,t[k],s.mG)==='Ouro').length;
     totalOuro+=ouro; totalInds+=Object.keys(s.mG).length;
     geralSetorCache[key] = { t, bG, mes, ano };
     const bars=Object.keys(s.mG).map(k=>{ const nv=avaliar(k,t[k],s.mG); const pct=nv==='Ouro'?100:nv==='Prata'?70:nv==='Bronze'?45:20;
       return `<div class="sov-bar"><span class="sb-lbl">${s.mG[k].label}</span><div class="sb-trk"><div class="sb-fil ${nv}" style="width:${pct}%"></div></div></div>`; }).join('');
     html+=`<div class="sov-card" onclick="abrirResumoSetor('${key}')" title="Clique para ver o resumo completo do setor"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span class="sov-bonif">${fmtBonif(bG)}</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div><div class="sov-bars">${bars}</div><div style="margin-top:7px;font-size:.68rem;color:var(--muted)">${ouro}/${Object.keys(s.mG).length} indicadores Ouro</div></div>`;
-  }
+  });
   Object.entries(SD).filter(([,s])=>s.status==='em_breve'&&!supervisorSetores).forEach(([,s])=>{
     html+=`<div class="sov-card em-breve"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span style="font-size:.65rem;color:var(--gold);background:#1e1600;border:1px solid var(--gold);border-radius:10px;padding:2px 8px">Em breve</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div></div>`;
   });
+  const totalBonif = totalBonifG + totalBonifA;
   const el=id=>document.getElementById(id);
   if(el('geral-setores')) el('geral-setores').innerHTML=html;
   if(el('geral-kpis')) el('geral-kpis').innerHTML=`
-    <div class="dash-kpi"><div class="dk-label">Bonif. Total Gestores</div><div class="dk-val">${fmtBonif(totalBonif)}</div><div class="dk-sub">setores ativos</div></div>
+    <div class="dash-kpi"><div class="dk-label">Bonif. Total</div><div class="dk-val">${fmtBonif(totalBonif)}</div><div class="dk-sub">gestores + auxiliares</div></div>
     <div class="dash-kpi"><div class="dk-label">Setores</div><div class="dk-val" style="color:var(--success)">${setoresAtivos.length}/${supervisorSetores?supervisorSetores.length:10}</div></div>
     <div class="dash-kpi"><div class="dk-label">Indicadores Ouro</div><div class="dk-val" style="color:var(--ouro)">${totalOuro}/${totalInds}</div></div>`;
 };
