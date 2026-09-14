@@ -113,7 +113,7 @@
     .ind-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; position:relative; overflow:hidden; }
     .ind-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
     .ind-card.Ouro::before   { background:var(--ouro); }
-    .ind-card.Prata::before  { background:var(--prata); }
+    .ind-card.Folheado::before  { background:var(--prata); }
     .ind-card.Bronze::before { background:var(--bronze); }
     .ind-card.Fora::before   { background:var(--fora); }
     .ind-card.sem-dado::before { background:var(--border); }
@@ -122,7 +122,7 @@
     .ind-card .ic-row   { display:flex; align-items:center; justify-content:space-between; margin-top:7px; }
     .badge { display:inline-flex; align-items:center; padding:2px 9px; border-radius:20px; font-size:.72rem; font-weight:700; }
     .badge.Ouro   { background:#332800; color:var(--ouro); }
-    .badge.Prata  { background:#222;    color:var(--prata); }
+    .badge.Folheado  { background:#222;    color:var(--prata); }
     .badge.Bronze { background:#2a1800; color:var(--bronze); }
     .badge.Fora, .badge.sem-dado { background:#1a1a1a; color:var(--muted); }
     .ic-bonif { font-size:.82rem; color:var(--gold); font-weight:600; }
@@ -148,7 +148,7 @@
     .nb-track { flex:1; height:20px; background:var(--card2); border-radius:4px; overflow:hidden; }
     .nb-fill  { height:100%; border-radius:4px; display:flex; align-items:center; padding-left:7px; font-size:.7rem; font-weight:700; min-width:36px; }
     .nb-fill.Ouro   { background:#332800; color:var(--ouro); border:1px solid var(--ouro); }
-    .nb-fill.Prata  { background:#222;    color:var(--prata); border:1px solid var(--prata); }
+    .nb-fill.Folheado  { background:#222;    color:var(--prata); border:1px solid var(--prata); }
     .nb-fill.Bronze { background:#2a1800; color:var(--bronze); border:1px solid var(--bronze); }
     .nb-fill.Fora, .nb-fill.sem-dado { background:#1a1a1a; color:var(--muted); border:1px solid var(--border); }
     .placar-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
@@ -178,7 +178,7 @@
     .hist-table td { padding:7px 9px; border-bottom:1px solid var(--border); }
     .hist-table tr:hover td { background:var(--card2); }
     .hist-table .nv.Ouro   { color:var(--ouro); font-weight:700; }
-    .hist-table .nv.Prata  { color:var(--prata); font-weight:700; }
+    .hist-table .nv.Folheado  { color:var(--prata); font-weight:700; }
     .hist-table .nv.Bronze { color:var(--bronze); font-weight:700; }
     .hist-table .nv.Fora   { color:var(--fora); }
     .hist-toggle { display:flex; gap:8px; margin-bottom:12px; }
@@ -223,7 +223,7 @@
     .sov-bar .sb-trk { flex:1; height:12px; background:var(--card2); border-radius:3px; overflow:hidden; }
     .sov-bar .sb-fil { height:100%; border-radius:3px; }
     .sov-bar .sb-fil.Ouro   { background:var(--ouro); }
-    .sov-bar .sb-fil.Prata  { background:var(--prata); }
+    .sov-bar .sb-fil.Folheado  { background:var(--prata); }
     .sov-bar .sb-fil.Bronze { background:var(--bronze); }
     .sov-bar .sb-fil.Fora, .sov-bar .sb-fil.sem-dado { background:var(--fora); }
     .geral-config-section { margin-bottom:20px; }
@@ -738,8 +738,8 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
 const fmtBonif = v => adminUnlocked ? `R$ ${v.toFixed(2).replace('.',',')}` : '🔒 ••••';
 const fmtVal = (v, unit) => { if(v===null||v===undefined) return '—'; const n=Number(v); return isNaN(n)?'—':n.toLocaleString('pt-BR',{maximumFractionDigits:1})+(unit?` ${unit}`:''); };
 const toast = msg => { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); };
-const avaliar = (k,v,m) => { if(!m[k]||v===null||v===undefined||v==='') return 'sem-dado'; const n=parseFloat(v); if(m[k].tipo==='maior'){if(n>=m[k].ouro)return 'Ouro';if(n>=m[k].prata)return 'Prata';if(n>=m[k].bronze)return 'Bronze';return 'Fora';}else{if(n<=m[k].ouro)return 'Ouro';if(n<=m[k].prata)return 'Prata';if(n<=m[k].bronze)return 'Bronze';return 'Fora';} };
-const calcBonif = (nivel,bonif) => nivel==='Ouro'?bonif.ouro:nivel==='Prata'?bonif.prata:nivel==='Bronze'?bonif.bronze:0;
+const avaliar = (k,v,m) => { if(!m[k]||v===null||v===undefined||v==='') return 'sem-dado'; const n=parseFloat(v); if(m[k].tipo==='maior'){if(n>=m[k].ouro)return 'Ouro';if(n>=m[k].prata)return 'Folheado';if(n>=m[k].bronze)return 'Bronze';return 'Fora';}else{if(n<=m[k].ouro)return 'Ouro';if(n<=m[k].prata)return 'Folheado';if(n<=m[k].bronze)return 'Bronze';return 'Fora';} };
+const calcBonif = (nivel,bonif) => nivel==='Ouro'?bonif.ouro:nivel==='Folheado'?bonif.prata:nivel==='Bronze'?bonif.bronze:0;
 const agregarMes = (lancs,m) => { const r={}; Object.keys(m).forEach(k=>{ const vals=lancs.map(l=>l[k]).filter(v=>v!=null&&v!==''); if(!vals.length){r[k]=null;return;} const nums=vals.map(Number); r[k]=m[k].agg==='avg'?nums.reduce((a,b)=>a+b,0)/nums.length:nums.reduce((a,b)=>a+b,0); }); return r; };
 const calcTotal = (t,m) => Object.keys(m).reduce((s,k)=>s+calcBonif(avaliar(k,t[k],m),m[k].bonif),0);
 window.fecharModais = () => document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('open'));
@@ -1185,7 +1185,7 @@ async function carregarSetor() {
 function renderCards(totais, metas) {
   return Object.keys(metas).map(k=>{
     const m=metas[k]; const v=totais[k]; const nv=avaliar(k,v,metas); const bonif=calcBonif(nv,m.bonif);
-    const meta=m.tipo==='maior'?`≥${m.bronze} Bronze · ≥${m.prata} Prata · ${m.ouro} Ouro`:`≤${m.bronze} Bronze · ≤${m.prata} Prata · ${m.ouro} Ouro`;
+    const meta=m.tipo==='maior'?`≥${m.bronze} Bronze · ≥${m.prata} Folheado · ${m.ouro} Ouro`:`≤${m.bronze} Bronze · ≤${m.prata} Folheado · ${m.ouro} Ouro`;
     return `<div class="ind-card ${nv}">
       <div class="ic-nome">${m.label}</div>
       <div class="ic-valor">${fmtVal(v,m.unit)}</div>
@@ -1216,10 +1216,10 @@ async function renderDash(mes, ano) {
   const ouroG=Object.keys(MG).filter(k=>avaliar(k,tG[k],MG)==='Ouro').length;
   el('dk-g').textContent=fmtBonif(bG); el('dk-a').textContent=fmtBonif(bA);
   el('dk-tot').textContent=fmtBonif(bG+bA); el('dk-ouro').textContent=`${ouroG}/${Object.keys(MG).length}`;
-  el('dash-bars').innerHTML=Object.keys(MG).map(k=>{ const nv=avaliar(k,tG[k],MG); const pct=nv==='Ouro'?100:nv==='Prata'?70:nv==='Bronze'?45:20;
+  el('dash-bars').innerHTML=Object.keys(MG).map(k=>{ const nv=avaliar(k,tG[k],MG); const pct=nv==='Ouro'?100:nv==='Folheado'?70:nv==='Bronze'?45:20;
     return `<div class="nivel-bar-row"><span class="nb-label">${MG[k].label}</span><div class="nb-track"><div class="nb-fill ${nv}" style="width:${pct}%">${nv}</div></div></div>`; }).join('');
   const nvs=Object.keys(MG).map(k=>avaliar(k,tG[k],MG)); const cnt=n=>nvs.filter(x=>x===n).length;
-  el('dash-placar').innerHTML=`<div class="placar-card ouro"><div class="pc-num">${cnt('Ouro')}</div><div class="pc-lbl">Ouro</div></div><div class="placar-card prata"><div class="pc-num">${cnt('Prata')}</div><div class="pc-lbl">Prata</div></div><div class="placar-card bronze"><div class="pc-num">${cnt('Bronze')}</div><div class="pc-lbl">Bronze</div></div><div class="placar-card fora"><div class="pc-num">${cnt('Fora')}</div><div class="pc-lbl">Fora</div></div>`;
+  el('dash-placar').innerHTML=`<div class="placar-card ouro"><div class="pc-num">${cnt('Ouro')}</div><div class="pc-lbl">Ouro</div></div><div class="placar-card prata"><div class="pc-num">${cnt('Folheado')}</div><div class="pc-lbl">Folheado</div></div><div class="placar-card bronze"><div class="pc-num">${cnt('Bronze')}</div><div class="pc-lbl">Bronze</div></div><div class="placar-card fora"><div class="pc-num">${cnt('Fora')}</div><div class="pc-lbl">Fora</div></div>`;
   const grafG=[],grafA=[];
   for(let m=1;m<=12;m++){
     const [sg,sa]=await Promise.all([getDocs(query(collection(db,s.colG),where('mes','==',m),where('ano','==',ano))),getDocs(query(collection(db,s.colA),where('mes','==',m),where('ano','==',ano)))]);
@@ -1313,7 +1313,7 @@ const PDF_COR = {
   fora:[190,190,190], atencaoBg:[253,236,220], atencaoTxt:[150,70,20],
 };
 function pdfNivelCor(nv){
-  return nv==='Ouro'?PDF_COR.ouro:nv==='Prata'?PDF_COR.prata:nv==='Bronze'?PDF_COR.bronze:PDF_COR.fora;
+  return nv==='Ouro'?PDF_COR.ouro:nv==='Folheado'?PDF_COR.prata:nv==='Bronze'?PDF_COR.bronze:PDF_COR.fora;
 }
 function pdfTendenciaTxt(nvA,nvB,rankNv){
   if(rankNv[nvA]===undefined||rankNv[nvB]===undefined) return 'Sem dado anterior';
@@ -1321,10 +1321,10 @@ function pdfTendenciaTxt(nvA,nvB,rankNv){
   if(rankNv[nvA]<rankNv[nvB]) return 'Piorou';
   return 'Manteve';
 }
-// Desenha um gráfico de barras comparando o nível (Fora/Bronze/Prata/Ouro) de cada indicador nos 3 meses
+// Desenha um gráfico de barras comparando o nível (Fora/Bronze/Folheado/Ouro) de cada indicador nos 3 meses
 function pdfDesenharGraficoComparativo(docPdf, x, y, w, keys, MG, niveisPorMes, mesLabels) {
   const h = 62, baseY = y + h;
-  const nivelLbls = ['Fora','Bronze','Prata','Ouro'];
+  const nivelLbls = ['Fora','Bronze','Folheado','Ouro'];
   docPdf.setDrawColor(225,225,225);
   for(let i=0;i<=3;i++){
     const yy = baseY - (i/3)*h;
@@ -1367,7 +1367,7 @@ function pdfDesenharGraficoComparativo(docPdf, x, y, w, keys, MG, niveisPorMes, 
 // Gráfico de barras comparando o desempenho médio (0-3) de cada auxiliar, já ordenados do melhor pro pior
 function pdfDesenharGraficoAuxiliares(docPdf, x, y, w, ordenados) {
   const h = 62, baseY = y + h;
-  const nivelLbls = ['Fora','Bronze','Prata','Ouro'];
+  const nivelLbls = ['Fora','Bronze','Folheado','Ouro'];
   docPdf.setDrawColor(225,225,225);
   for(let i=0;i<=3;i++){
     const yy = baseY - (i/3)*h;
@@ -1413,7 +1413,7 @@ window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) =>
     catch(e){ colabs = s.colabsDefault||[]; }
     if(!colabs.length){ toast('⚠️ Nenhum auxiliar cadastrado'); return; }
 
-    const rankNv = {'Fora':0,'Bronze':1,'Prata':2,'Ouro':3};
+    const rankNv = {'Fora':0,'Bronze':1,'Folheado':2,'Ouro':3};
     const dadosColabs = await Promise.all(colabs.map(async nome=>{
       const mAc = metasColab(s, nome);
       const docs = await docsDoPeriodo(s.colA, periodo, nome);
@@ -1424,7 +1424,7 @@ window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) =>
       const scoreMedio = validos.length ? validos.reduce((a,n)=>a+rankNv[n],0)/validos.length : null;
       const grupo = (s.gruposAux && s.colabGrupos) ? (s.gruposAux[s.colabGrupos[nome]]?.nome||'') : '';
       const cnt = nv => niveis.filter(x=>x===nv).length;
-      return { nome, grupo, bonif, scoreMedio, ouro:cnt('Ouro'), prata:cnt('Prata'), bronze:cnt('Bronze'), fora:cnt('Fora'), t, mAc };
+      return { nome, grupo, bonif, scoreMedio, ouro:cnt('Ouro'), prata:cnt('Folheado'), bronze:cnt('Bronze'), fora:cnt('Fora'), t, mAc };
     }));
 
     const ordenados = [...dadosColabs].sort((a,b)=>{
@@ -1450,7 +1450,7 @@ window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) =>
     const pdfVal2 = v => v===null||v===undefined ? 'N/D' : v.toFixed(1);
     const pdfVal = (v,u) => fmtVal(v,u).replace(/—/g,'-');
     const pdfLabel = lbl => lbl.length>42 ? lbl.slice(0,41)+'.' : lbl;
-    const head = temGrupos ? [['#','Auxiliar','Grupo','Ouro','Prata','Bronze','Fora','Score (0-3)']] : [['#','Auxiliar','Ouro','Prata','Bronze','Fora','Score (0-3)']];
+    const head = temGrupos ? [['#','Auxiliar','Grupo','Ouro','Folheado','Bronze','Fora','Score (0-3)']] : [['#','Auxiliar','Ouro','Folheado','Bronze','Fora','Score (0-3)']];
     const rows = ordenados.map((c,i)=>{
       const base = [String(i+1), c.nome];
       if(temGrupos) base.push(c.grupo);
@@ -1580,7 +1580,7 @@ window.gerarRelatorioPDF = async (mesIni,anoIni,mesFim,anoFim) => {
     }));
     const [atual, ant1, ant2] = dadosPorMes;
     const mesLabel = d => mesLabelPeriodo(d.per);
-    const rankNv = {'Fora':0,'Bronze':1,'Prata':2,'Ouro':3};
+    const rankNv = {'Fora':0,'Bronze':1,'Folheado':2,'Ouro':3};
 
     const keys = Object.keys(MG);
     const niveisAtuais = keys.map(k=>avaliar(k, atual.t[k], MG));
@@ -1604,7 +1604,7 @@ window.gerarRelatorioPDF = async (mesIni,anoIni,mesFim,anoFim) => {
 
     // ── Placar do mês vigente ──
     const cnt = nv => niveisAtuais.filter(x=>x===nv).length;
-    const placar = [['Ouro',cnt('Ouro'),PDF_COR.ouro],['Prata',cnt('Prata'),PDF_COR.prata],['Bronze',cnt('Bronze'),PDF_COR.bronze],['Fora',cnt('Fora'),[190,80,70]]];
+    const placar = [['Ouro',cnt('Ouro'),PDF_COR.ouro],['Folheado',cnt('Folheado'),PDF_COR.prata],['Bronze',cnt('Bronze'),PDF_COR.bronze],['Fora',cnt('Fora'),[190,80,70]]];
     const boxW = USAVEL/4, boxY = 37, boxH = 16;
     placar.forEach(([lbl,n,cor],i)=>{
       const bx = MARGEM + i*boxW;
@@ -1716,7 +1716,7 @@ async function carregarAuxRanking(mes, ano) {
   el('aux-loading').style.display='block'; el('aux-ranking').innerHTML=''; el('aux-total').style.display='none';
   let colabs=[null];
   if(s.temMultiplosAux){ try{ const sn=await getDoc(doc(db,'config',s.cfgColabs)); colabs=sn.exists()?(sn.data().lista||[null]):(s.colabsDefault||[null]); }catch(e){} }
-  const nvsClr={Ouro:'var(--ouro)',Prata:'var(--prata)',Bronze:'var(--bronze)',Fora:'var(--muted)','sem-dado':'var(--muted)'};
+  const nvsClr={Ouro:'var(--ouro)',Folheado:'var(--prata)',Bronze:'var(--bronze)',Fora:'var(--muted)','sem-dado':'var(--muted)'};
   let html=''; let total=0;
   for(const colab of colabs){
     let q=query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano));
@@ -1804,7 +1804,7 @@ window.abrirModal = () => {
     <div class="form-group">
       <label>${metas[k].label} (${metas[k].unit})</label>
       <input type="number" id="lc-${k}" placeholder="—" min="0" step="${metas[k].unit==='%'?'0.1':'1'}">
-      <span class="hint">${metas[k].tipo==='maior'?`Bronze ≥${metas[k].bronze} · Prata ≥${metas[k].prata} · Ouro ${metas[k].ouro}`:`Bronze ≤${metas[k].bronze} · Prata ≤${metas[k].prata} · Ouro ${metas[k].ouro}`} ${metas[k].unit}</span>
+      <span class="hint">${metas[k].tipo==='maior'?`Bronze ≥${metas[k].bronze} · Folheado ≥${metas[k].prata} · Ouro ${metas[k].ouro}`:`Bronze ≤${metas[k].bronze} · Folheado ≤${metas[k].prata} · Ouro ${metas[k].ouro}`} ${metas[k].unit}</span>
     </div>`).join('');
   document.getElementById('modal-lancar').classList.add('open');
 };
@@ -1830,11 +1830,11 @@ window.salvarLancamento = async () => {
 // ── Config Setor ──
 function renderCfgMetasG() {
   const el=document.getElementById('cfg-metas-g'); if(!el) return;
-  el.innerHTML=Object.keys(MG).map(k=>`<div class="metas-ind"><div class="mi-label">${MG[k].label}</div><div class="mi-grid"><div><label>Bronze</label><input type="number" id="mg-${k}-b" value="${MG[k].bronze}" step="0.1"></div><div><label>Prata</label><input type="number" id="mg-${k}-p" value="${MG[k].prata}" step="0.1"></div><div><label>Ouro</label><input type="number" id="mg-${k}-o" value="${MG[k].ouro}" step="0.1"></div></div></div>`).join('');
+  el.innerHTML=Object.keys(MG).map(k=>`<div class="metas-ind"><div class="mi-label">${MG[k].label}</div><div class="mi-grid"><div><label>Bronze</label><input type="number" id="mg-${k}-b" value="${MG[k].bronze}" step="0.1"></div><div><label>Folheado</label><input type="number" id="mg-${k}-p" value="${MG[k].prata}" step="0.1"></div><div><label>Ouro</label><input type="number" id="mg-${k}-o" value="${MG[k].ouro}" step="0.1"></div></div></div>`).join('');
 }
 function renderCfgMetasA() {
   const el=document.getElementById('cfg-metas-a'); if(!el) return;
-  el.innerHTML=Object.keys(MA).map(k=>`<div class="metas-ind"><div class="mi-label">${MA[k].label}</div><div class="mi-grid"><div><label>Bronze</label><input type="number" id="ma-${k}-b" value="${MA[k].bronze}" step="0.1"></div><div><label>Prata</label><input type="number" id="ma-${k}-p" value="${MA[k].prata}" step="0.1"></div><div><label>Ouro</label><input type="number" id="ma-${k}-o" value="${MA[k].ouro}" step="0.1"></div></div></div>`).join('');
+  el.innerHTML=Object.keys(MA).map(k=>`<div class="metas-ind"><div class="mi-label">${MA[k].label}</div><div class="mi-grid"><div><label>Bronze</label><input type="number" id="ma-${k}-b" value="${MA[k].bronze}" step="0.1"></div><div><label>Folheado</label><input type="number" id="ma-${k}-p" value="${MA[k].prata}" step="0.1"></div><div><label>Ouro</label><input type="number" id="ma-${k}-o" value="${MA[k].ouro}" step="0.1"></div></div></div>`).join('');
 }
 window.salvarMetasG = async () => {
   const s=SD[setorLogado]; Object.keys(MG).forEach(k=>{ const b=document.getElementById(`mg-${k}-b`),p=document.getElementById(`mg-${k}-p`),o=document.getElementById(`mg-${k}-o`); if(b)MG[k].bronze=parseFloat(b.value);if(p)MG[k].prata=parseFloat(p.value);if(o)MG[k].ouro=parseFloat(o.value); });
@@ -1985,7 +1985,7 @@ window.atualizarGeral = async () => {
     const ouro=Object.keys(s.mG).filter(k=>avaliar(k,t[k],s.mG)==='Ouro').length;
     totalOuro+=ouro; totalInds+=Object.keys(s.mG).length;
     geralSetorCache[key] = { t, bG, mes, ano };
-    const bars=Object.keys(s.mG).map(k=>{ const nv=avaliar(k,t[k],s.mG); const pct=nv==='Ouro'?100:nv==='Prata'?70:nv==='Bronze'?45:20;
+    const bars=Object.keys(s.mG).map(k=>{ const nv=avaliar(k,t[k],s.mG); const pct=nv==='Ouro'?100:nv==='Folheado'?70:nv==='Bronze'?45:20;
       return `<div class="sov-bar"><span class="sb-lbl">${s.mG[k].label}</span><div class="sb-trk"><div class="sb-fil ${nv}" style="width:${pct}%"></div></div></div>`; }).join('');
     html+=`<div class="sov-card" onclick="abrirResumoSetor('${key}')" title="Clique para ver o resumo completo do setor"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span class="sov-bonif">${fmtBonif(bG)}</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div><div class="sov-bars">${bars}</div><div style="margin-top:7px;font-size:.68rem;color:var(--muted)">${ouro}/${Object.keys(s.mG).length} indicadores Ouro</div></div>`;
   });
