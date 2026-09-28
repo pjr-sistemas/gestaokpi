@@ -226,6 +226,15 @@
     .sov-bar .sb-fil.Folheado  { background:var(--prata); }
     .sov-bar .sb-fil.Bronze { background:var(--bronze); }
     .sov-bar .sb-fil.Fora, .sov-bar .sb-fil.sem-dado { background:var(--fora); }
+    .sov-sec { font-size:.62rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600; margin:10px 0 6px; padding-top:8px; border-top:1px solid var(--border); }
+    .sov-aux { display:flex; align-items:center; gap:7px; margin-bottom:4px; }
+    .sov-aux .sa-nome { font-size:.65rem; color:var(--muted); width:90px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .sov-aux .sa-seg { flex:1; display:flex; gap:2px; height:12px; }
+    .sov-aux .sa-seg i { flex:1; border-radius:2px; background:var(--fora); }
+    .sov-aux .sa-seg i.Ouro { background:var(--ouro); }
+    .sov-aux .sa-seg i.Folheado { background:var(--prata); }
+    .sov-aux .sa-seg i.Bronze { background:var(--bronze); }
+    .sov-aux .sa-ouro { font-size:.62rem; color:var(--muted); width:26px; text-align:right; flex-shrink:0; }
     .geral-config-section { margin-bottom:20px; }
     .geral-config-section h4 { color:var(--gold); font-size:.85rem; margin-bottom:10px; }
 
@@ -1970,25 +1979,34 @@ window.atualizarGeral = async () => {
     let colabs=[null];
     try{ const csnap=await getDoc(doc(db,'config',s.cfgColabs)); colabs=csnap.exists()?(csnap.data().lista||[null]):(s.colabsDefault||[null]); }
     catch(e){ colabs = s.colabsDefault||[null]; }
-    const bA = (await Promise.all(colabs.map(async nome=>{
+    const auxs = await Promise.all(colabs.map(async nome=>{
       const mAc = await metasAuxiliarSetorGeral(s, nome);
       let q = query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano));
       if(nome) q = query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',nome));
       const asnap = await getDocs(q);
       const at = agregarMes(asnap.docs.map(d=>d.data()), mAc);
-      return calcTotal(at, mAc);
-    }))).reduce((a,b)=>a+b,0);
-    return { key, s, t, bG, bA };
+      return { nome: nome||'Auxiliar', mAc, at, bonif: calcTotal(at, mAc) };
+    }));
+    const bA = auxs.reduce((a,x)=>a+x.bonif,0);
+    return { key, s, t, bG, bA, auxs };
   }));
   let totalBonifG=0, totalBonifA=0, totalOuro=0, totalInds=0; let html='';
-  dados.forEach(({key,s,t,bG,bA})=>{
+  dados.forEach(({key,s,t,bG,bA,auxs})=>{
     totalBonifG+=bG; totalBonifA+=bA;
     const ouro=Object.keys(s.mG).filter(k=>avaliar(k,t[k],s.mG)==='Ouro').length;
     totalOuro+=ouro; totalInds+=Object.keys(s.mG).length;
     geralSetorCache[key] = { t, bG, mes, ano };
     const bars=Object.keys(s.mG).map(k=>{ const nv=avaliar(k,t[k],s.mG); const pct=nv==='Ouro'?100:nv==='Folheado'?70:nv==='Bronze'?45:20;
       return `<div class="sov-bar"><span class="sb-lbl">${s.mG[k].label}</span><div class="sb-trk"><div class="sb-fil ${nv}" style="width:${pct}%"></div></div></div>`; }).join('');
-    html+=`<div class="sov-card" onclick="abrirResumoSetor('${key}')" title="Clique para ver o resumo completo do setor"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span class="sov-bonif">${fmtBonif(bG)}</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div><div class="sov-bars">${bars}</div><div style="margin-top:7px;font-size:.68rem;color:var(--muted)">${ouro}/${Object.keys(s.mG).length} indicadores Ouro</div></div>`;
+    const auxRows = auxs.map(x=>{
+      const ks = Object.keys(x.mAc);
+      const nvs = ks.map(k=>avaliar(k,x.at[k],x.mAc));
+      const ouroA = nvs.filter(n=>n==='Ouro').length;
+      totalOuro += ouroA; totalInds += ks.length;
+      const segs = ks.length ? ks.map((k,i)=>`<i class="${nvs[i]}" title="${x.mAc[k].label.replace(/"/g,'&quot;')}"></i>`).join('') : '<em style="font-size:.6rem;color:var(--muted)">sem indicadores</em>';
+      return `<div class="sov-aux"><span class="sa-nome" title="${x.nome.replace(/"/g,'&quot;')}">${x.nome}</span><div class="sa-seg">${segs}</div><span class="sa-ouro">${ouroA}/${ks.length}</span></div>`;
+    }).join('');
+    html+=`<div class="sov-card" onclick="abrirResumoSetor('${key}')" title="Clique para ver o resumo completo do setor"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span class="sov-bonif">${fmtBonif(bG+bA)}</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div><div class="sov-sec" style="border-top:none;margin-top:0;padding-top:0">Gestor · ${ouro}/${Object.keys(s.mG).length} Ouro</div><div class="sov-bars">${bars}</div><div class="sov-sec">Auxiliares (${auxs.length})</div>${auxRows}</div>`;
   });
   Object.entries(SD).filter(([,s])=>s.status==='em_breve'&&!supervisorSetores).forEach(([,s])=>{
     html+=`<div class="sov-card em-breve"><div class="sov-header"><div class="sov-nome">${s.icon} ${s.nome}</div><span style="font-size:.65rem;color:var(--gold);background:#1e1600;border:1px solid var(--gold);border-radius:10px;padding:2px 8px">Em breve</span></div><div class="sov-gestor">Responsável: ${s.gestor}</div></div>`;
