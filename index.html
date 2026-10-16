@@ -1419,12 +1419,16 @@ window.gerarRelatorioAuxiliaresPDF = async (key, mesIni,anoIni,mesFim,anoFim) =>
     let colabs=[];
     try{ const snap=await getDoc(doc(db,'config',s.cfgColabs)); colabs=snap.exists()?(snap.data().lista||[]):(s.colabsDefault||[]); }
     catch(e){ colabs = s.colabsDefault||[]; }
+    // Inclui quem tem lançamento no período mas saiu da lista
+    const todosDocsAux = await docsDoPeriodo(s.colA, periodo);
+    const porColabAux = {}; todosDocsAux.forEach(x=>{ const n=x.colaborador||'—'; (porColabAux[n]=porColabAux[n]||[]).push(x); });
+    Object.keys(porColabAux).forEach(n=>{ if(n!=='—'&&!colabs.includes(n)) colabs.push(n); });
     if(!colabs.length){ toast('⚠️ Nenhum auxiliar cadastrado'); return; }
 
     const rankNv = {'Fora':0,'Bronze':1,'Folheado':2,'Ouro':3};
     const dadosColabs = await Promise.all(colabs.map(async nome=>{
       const mAc = metasColab(s, nome);
-      const docs = await docsDoPeriodo(s.colA, periodo, nome);
+      const docs = porColabAux[nome]||[];
       const t = agregarMes(docs, mAc);
       const bonif = calcTotal(t, mAc);
       const niveis = Object.keys(mAc).map(k=>avaliar(k,t[k],mAc));
@@ -1722,14 +1726,17 @@ async function carregarAuxRanking(mes, ano) {
   const s=SD[setorLogado]; const el=id=>document.getElementById(id);
   if(!el('aux-loading')) return;
   el('aux-loading').style.display='block'; el('aux-ranking').innerHTML=''; el('aux-total').style.display='none';
-  let colabs=[null];
-  if(s.temMultiplosAux){ try{ const sn=await getDoc(doc(db,'config',s.cfgColabs)); colabs=sn.exists()?(sn.data().lista||[null]):(s.colabsDefault||[null]); }catch(e){} }
+  let colabs=[];
+  if(s.temMultiplosAux){ try{ const sn=await getDoc(doc(db,'config',s.cfgColabs)); colabs=sn.exists()?(sn.data().lista||[]):(s.colabsDefault||[]); }catch(e){} }
   const nvsClr={Ouro:'var(--ouro)',Folheado:'var(--prata)',Bronze:'var(--bronze)',Fora:'var(--muted)','sem-dado':'var(--muted)'};
   let html=''; let total=0;
-  for(const colab of colabs){
-    let q=query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano));
-    if(colab) q=query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano),where('colaborador','==',colab));
-    const sn=await getDocs(q); const dados=sn.docs.map(d=>d.data());
+  // Inclui quem tem lançamento no mês mas saiu da lista, para o total bater com o dashboard
+  const allSn=await getDocs(query(collection(db,s.colA),where('mes','==',mes),where('ano','==',ano)));
+  const porColab={}; allSn.docs.forEach(d=>{ const x=d.data(); const n=x.colaborador||'—'; (porColab[n]=porColab[n]||[]).push(x); });
+  const nomesRank=[...colabs]; Object.keys(porColab).forEach(n=>{ if(n!=='—'&&!nomesRank.includes(n)) nomesRank.push(n); });
+  if(porColab['—']||!nomesRank.length) nomesRank.push(null);
+  for(const colab of nomesRank){
+    const dados=porColab[colab||'—']||[];
     const mAc=metasColab(s,colab);
     const t=agregarMes(dados,mAc); const bonif=calcTotal(t,mAc); total+=bonif;
     const sem=dados.length===0;
@@ -2204,16 +2211,18 @@ window.gerarRelatorioGeralPDF = async (keys, periodo, opts) => {
         item.gestor = { mG, t, total: calcTotal(t, mG) };
       }
       if(incAuxiliares){
-        let colabs = [null];
-        if(s.temMultiplosAux){
-          try{ const snap = await getDoc(doc(db,'config',s.cfgColabs)); colabs = snap.exists() ? (snap.data().lista||[null]) : (s.colabsDefault||[null]); }
-          catch(e){ colabs = s.colabsDefault || [null]; }
-        }
-        const auxiliares = await Promise.all(colabs.map(async nome=>{
+        let colabs = [];
+        try{ const snap = await getDoc(doc(db,'config',s.cfgColabs)); colabs = snap.exists() ? (snap.data().lista||[]) : (s.colabsDefault||[]); }
+        catch(e){ colabs = s.colabsDefault || []; }
+        // Inclui também quem tem lançamento no período mas saiu da lista (mesma regra do dashboard)
+        const todosDocs = await docsDoPeriodo(s.colA, periodo);
+        const porColab = {}; todosDocs.forEach(x=>{ const n=x.colaborador||'—'; (porColab[n]=porColab[n]||[]).push(x); });
+        const nomes = [...colabs]; Object.keys(porColab).forEach(n=>{ if(!nomes.includes(n)) nomes.push(n); });
+        if(!nomes.length) nomes.push('—');
+        const auxiliares = await Promise.all(nomes.map(async nome=>{
           const mAc = await metasAuxiliarSetorGeral(s, nome);
-          const docs = await docsDoPeriodo(s.colA, periodo, nome);
-          const t = agregarMes(docs, mAc);
-          return { nome, mAc, t, total: calcTotal(t, mAc) };
+          const t = agregarMes(porColab[nome]||[], mAc);
+          return { nome: nome==='—'?null:nome, mAc, t, total: calcTotal(t, mAc) };
         }));
         item.auxiliares = auxiliares;
         item.totalAuxiliares = auxiliares.reduce((a,c)=>a+c.total,0);
